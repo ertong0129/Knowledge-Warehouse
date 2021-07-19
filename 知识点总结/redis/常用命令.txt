@@ -17,3 +17,5 @@ object encoding xxx 查看键所使用的数据结构
 type xxx  查看键的类型
 
 strlen xxx  查看键对应的值的长度
+
+debug object xxx 查看对象信息
