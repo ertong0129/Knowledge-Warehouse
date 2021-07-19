@@ -1,0 +1,16 @@
+jinfo：实时地查看和调整虚拟机的各项参数
+
+命令格式：
+jinfo [option] pid
+
+参数说明：
+no option 输出全部的参数和系统属性
+-flag name 输出对应名称的参数
+-flag [+|-]name 开启或者关闭对应名称的参数
+-flag name=value 设定对应名称的参数
+-flags 输出全部的参数
+-sysprops 输出系统属性
+
+使用示例：
+查询CMSInitiatingOccupancyFraction参数的值
+jinfo -flag CMSInitiatingOccupancyFraction 1444

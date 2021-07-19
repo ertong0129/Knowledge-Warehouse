@@ -1,0 +1,37 @@
+string：key-value格式的数据结果
+
+命令示例：
+1.set key value
+设置指定key的值
+
+2.get key
+获取指定key的值
+
+3.getrange key start end（存疑）
+获取指定key的子字符串
+
+4.mget key1 [key2...]
+获取多个key的值
+
+5.setex key seconds value
+设置指定key的值及存活时间
+
+6.setnx key value
+在key不存在时，设置key的值
+
+7.psetex key millseconds value
+这个命令和 SETEX 命令相似，但它以毫秒为单位设置 key 的生存时间，而不是像 SETEX 命令那样，以秒为单位
+
+8.incr key
+将 key 中储存的数字值增一
+
+9.incrby key increment
+将 key 所储存的值加上给定的增量值（increment） 
+
+10.decr key
+将 key 中储存的数字值减一
+
+11.decrby key decrementkey 所储存的值减去给定的减量值（decrement）
+
+12.append key value
+如果 key 已经存在并且是一个字符串， APPEND 命令将指定的 value 追加到该 key 原来值（value）的末尾

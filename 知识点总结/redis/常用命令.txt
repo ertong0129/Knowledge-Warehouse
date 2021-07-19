@@ -1,0 +1,19 @@
+info [具体分块] 查看redis信息
+
+auth 密码    密码校验
+
+client info 查看客户端信息
+
+config get xxx 获取配置
+config set xxx xxx 设置
+
+slaveof ip port 设置主从
+
+一键情况redis中某键数据
+eval "local count=0\nlocal t1=redis.call('KEYS',KEYS[1])\nfor k,v in pairs(t1) do\nredis.call('del',v)\ncount=count+1\nend\nreturn count" 1 a*
+
+object encoding xxx 查看键所使用的数据结构
+
+type xxx  查看键的类型
+
+strlen xxx  查看键对应的值的长度

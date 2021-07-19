@@ -1,0 +1,38 @@
+分区：（个人理解）将一个表的索引拆分成多个可管理的部分（即多个b+树，减少层级），建立分区表后，表文件不再是一个.ibd文件，而是多个
+注意：存在主键或唯一索引的时候，分区列必须是唯一索引的组成部分
+
+分析语句：分析查询语句覆盖了哪些分区
+EXPLAIN PARTITIONS SELECT * FROM t;
+
+使用分析：只进行主键的查询，使用分区是有意义的。如果使用辅助索引，可能会查询多个分区（多倍IO次数），导致性能急剧下降
+
+1.RANGE分区：基于给定连续区间的列值放入分区
+使用示例：
+create table t(
+id int)
+partition by range(id)(
+partition p0 values less than (10),
+partition p1 values less than (20));
+
+alter table t add partition(partition p2 values less than maxvalue);
+
+2.LIST分区：基于离散的值放入分区
+create table t(
+id int)
+partition by list(id)(
+partition p0 values in (1,3,5,7,9),
+partition p1 values in (2,4,,6,,8,10));
+
+
+3.HASH分区：根据用户自定义的表达式返回的哈希函数进行分区，expr是一个计算哈希值的表达式
+create table t(
+id int)
+partition by hash(expr(id))
+partitions 4;
+
+
+4.KEY分区：根据mysql提供的哈希函数进行分区
+create table t(
+id int)
+partition by key(id)
+partitions 4;

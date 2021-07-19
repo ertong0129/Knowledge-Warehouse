@@ -1,0 +1,102 @@
+1.安装docker
+curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
+
+2.查看docker服务状态
+systemctl status docker
+docker --version
+
+3.安装k8s
+apt install -y apt-transport-https curl
+wget https://mirrors.aliyun.com/kubernetes/apt/doc/apt-key.gpg
+apt-key add apt-key.gpg
+apt-get install software-properties-common
+apt-add-repository "deb https://mirrors.aliyun.com/kubernetes/apt/ kubernetes-xenial main"
+apt update
+apt install -y kubelet kubeadm kubectl
+
+4.初始化
+kubeadm init --image-repository="registry.cn-hangzhou.aliyuncs.com/google_containers"
+（有错误，可以跳过错误）
+
+5.将环境变量导出
+vim ~/.bashrc
+在文件最后加入代码
+export KUBECONFIG=$HOME/.kube/config
+
+6.安装好了，查看node节点状态
+kubectl get nodes
+
+7.修改docker的源为国内的源
+vim /etc/docker/daemon.json
+文件内容为：
+{
+    "registry-mirrors": ["https://docker.mirrors.ustc.edu.cn"]
+}
+重启docker：
+systemctl restart docker
+
+8.master节点运行部署pod
+kubectl taint nodes --all node-role.kubernetes.io/master-
+
+9.部署个deploy用于测试
+vim nginx-deploment.yaml
+文件内容：
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  selector:
+    app: nginx
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: NodePort
+
+10.查看po、deploy、svc、ep
+kubectl get po
+kubectl get deploy
+kubectl get svc
+kubectl get ep
+
+11.修改svc配置，修改svc对外端口号
+先修改k8s配置文件，允许使用端口号1-65535（默认30000-32767）
+vim /etc/kubernetes/manifests/kube-apiserver.yaml
+找到--service-cluster-ip-range 这一行，在这一行的下一行增加 如下内容
+- --service-node-port-range=1-65535
+
+修改svc配置
+kubectl edit svc nginx-service，修改nodePort端口
+
+参考文档：
+https://mp.weixin.qq.com/s/syQKM031QvGQEFxB5bXaHA
+https://www.runoob.com/docker/debian-docker-install.html
+https://gitee.com/pingfanrenbiji/study/tree/master/k8s/nginx
+
+
+
+

@@ -1,0 +1,14 @@
+1.查看正在进行中的事务
+SELECT * FROM information_schema.INNODB_TRX \G
+
+2.查看等待锁的事务
+SELECT * FROM INFORMATION_SCHEMA.INNODB_LOCK_WAITS \G
+
+3.查看锁信息
+SELECT * FROM INFORMATION_SCHEMA.INNODB_LOCKS \G
+
+4.查看正在运行的进程
+SHOW PROCESSLIST;
+
+5.查看innodb引擎状态信息
+show engine innodb status \G

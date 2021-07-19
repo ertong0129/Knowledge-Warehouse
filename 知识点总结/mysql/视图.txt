@@ -1,0 +1,16 @@
+视图：抽象装置，基于基表的一个虚拟表
+
+创建视图的语法：
+CREATE 
+[OR REPLACE]
+[ALGORITHM = {UNDEFINED | MERGE | TEMPTABLE}]
+[DEFINER = {user | CURRENT_USER}]
+[SQL SECURITY {DEFINER | INVOKER}]
+VIEW view_name [(column_list)]
+as select_statement
+[WITH [CASADED | LOCAL] CHECK OPTION]
+
+使用示例：
+CREATE VIEW v_t AS SELECT * FROM t WHERE id > 10;
+
+一般不使用视图，复杂的视图语句会导致不走索引

@@ -1,0 +1,23 @@
+CyclicBarrier：知道所有线程都达到某个点，才继续执行下一步
+
+new CyclicBarrier(n)：创建一个有n个资格的barrier
+.await()：等待，直到有n个await()执行了，才执行下一步
+.await(time, timeUnit)：限时等待，超时抛出异常BrokenBarrierException、TimeoutException
+
+使用示例：
+public static void main(String[] args) {
+    CyclicBarrier barrier = new CyclicBarrier(7);
+    ExecutorService fixedPool = Executors.newFixedThreadPool(10);
+    for (int i = 0; i < 10; i++) {
+        fixedPool.execute(() -> {
+            try {
+                barrier.await(1, TimeUnit.SECONDS);
+                System.out.println("执行任务");
+                Thread.sleep(1000);
+            } catch (Exception e) {
+                e.printStackTrace();
+            } 
+         });
+    }
+    fixedPool.shutdown();
+}

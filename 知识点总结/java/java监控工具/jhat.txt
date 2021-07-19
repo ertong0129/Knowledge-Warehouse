@@ -1,0 +1,23 @@
+jhat：是jdk内置的工具之一。主要是用来分析java堆的命令，可以将堆中的对象以html的形式显示出来，包括对象的数量，大小等等，并支持对象查询语言。
+
+使用方法：打开jmap保存的堆快照文件
+jhat -J xxx.log(heap dump file)
+然后打开localhost:7000
+
+支持对象查询语句
+基本语法
+select <javascript expression to select>
+[from [instanceof] <class name> <identifier>]
+[where <javascript boolean expression to filter>]
+
+解释： 
+(1)class name是java类的完全限定名，如：java.lang.String, java.util.ArrayList, [C是char数组, [Ljava.io.File是java.io.File[]
+(2)类的完全限定名不足以唯一的辨识一个类，因为不同的ClassLoader载入的相同的类，它们在jvm中是不同类型的
+(3)instanceof表示也查询某一个类的子类，如果不明确instanceof，则只精确查询class name指定的类
+(4)from和where子句都是可选的
+(5)java域表示：obj.field_name；java数组表示：array[index]
+
+示例：
+查询长度大于100的字符串
+select s from java.lang.String s where s.count > 100
+

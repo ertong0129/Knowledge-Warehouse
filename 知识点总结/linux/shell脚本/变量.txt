@@ -1,0 +1,9 @@
+1.数组，多个元素以空格隔开
+ARRAY=(1 2 3)
+遍历数组
+for var in ${ARRAY[@]};
+do
+逻辑语句
+done
+获取数组长度
+echo ${#ARRAY[@]}

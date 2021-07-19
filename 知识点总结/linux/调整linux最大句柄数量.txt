@@ -1,0 +1,9 @@
+1.调整系统最大句柄数量（最大可打开文件数量）
+vim /etc/sysctl.conf
+加上以下参数：fs.file-max = 1000000
+使配置文件生效：sysctl -p
+
+2.调整单进程最大句柄数量
+查看单进程最大句柄数量：ulimit -n
+临时修改：ulimit -n 数量
+永久修改：vim /etc/security/limits.conf

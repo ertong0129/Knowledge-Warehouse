@@ -1,0 +1,27 @@
+1.Parallel Scavenge收集器：
+新生代收集器
+多线程收集器
+使用复制算法
+
+特点：控制CPU的吞吐量（运行用户代码的时间/（运行用户代码的时间+垃圾回收的时间））
+停顿时间越短越适合需要与用户交互的程序
+高吞吐量则适合在后台运算不需要交互的任务，高效率的利用CPU时间
+
+参数说明：
+-XX:MaxGCPauseMills：
+控制最大垃圾收集停顿时间
+
+-XX:GCTimeRatio：
+设置吞吐量大小，默认值为99（垃圾回收时间占比1%）
+如果设为19，垃圾回收时间占比5%（1/（1+19））
+
+-XX:+UseAdaptiveSizePolicy：
+当这个参数打开以后，不需要手动指定新生代的大小（-Xmn）、Eden区和Survivor区的比例（-XX:SurvivorRatio）、晋升老年代对象大小（-XX:PretenureSizeThreshold）等细节参数
+虚拟机会根据当前系统的运行情况动态调整这些数据，以提供最合适的停顿时间或最大的吞吐量
+
+2.Parallel Old收集器：Parallel Scavenge收集器的老年代版本（jdk1.6起提供）
+老年代收集器
+多线程收集器
+使用复制算法
+
+因为Parallel Scavenge在1.6之前只能和Serial Old，由于Serial Old的拖累，使用这一套的效率不比ParNew+CMS给力，所以研发了Parallel Old

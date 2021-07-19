@@ -1,0 +1,33 @@
+input {
+  beats {
+    port => 5044
+  }
+}
+
+filter {
+  if [language] == "java" {
+    grok {
+      match => ["message", "\[(?<time>%{YEAR}[./-]%{MONTHNUM}[./-]%{MONTHDAY}[- ]%{TIME})\] \[%{LOGLEVEL:level}\] \[%{GREEDYDATA:thread}\] %{JAVACLASS:class} \(%{NOTSPACE:method}\:%{NUMBER:line}\) \- %{GREEDYDATA:msg}"]
+    }
+    date {
+      match => ["time", "YYYY-MM-dd HH:mm:ss,SSS"]
+    }
+    mutate { remove_field => ["message"]}
+  } else if [language] == "nginx" {
+    grok {
+      match => ["message", "%{IP:remote_addr} - %{DATA:remote_user} \[%{HTTPDATE:time_local}\] \"%{WORD:request_method} %{NOTSPACE:uri} %{NOTSPACE:args} %{NOTSPACE:server_protocol}\" %{NUMBER:status} %{NUMBER:body_bytes_sent} \"%{DATA:http_referer}\"\"%{DATA:http_user_agent}\" \"%{DATA:http_x_forwarded_for}\" %{NUMBER:request_time} %{NUMBER:upstream_response_time} \"%{NOTSPACE:upstream_addr}\" %{NUMBER:upstream_status}"]
+    }
+    mutate { remove_field => ["message"]}
+  }
+}
+
+output {
+  if [language] in ["java","nginx"] {
+    elasticsearch {
+      hosts => ["10.82.204.171:9200"]
+      user => admin
+      password => admin
+      index => "%{service}_%{env}_%{+YYYY.MM.dd}"
+    }
+  }
+}

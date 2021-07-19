@@ -1,0 +1,10 @@
+jps：一个显示当前所有java进程pid的命令
+
+参数说明：
+-q 只显示pid，不显示class名称,jar文件名和传递给main方法的参数
+-m 输出传递给main方法的参数，在嵌入式jvm上可能是null
+-l 输出应用程序main class的完整package名或者应用程序的jar文件完整路径名
+-v 输出传递给JVM的参数
+
+使用示例：
+jps -lm

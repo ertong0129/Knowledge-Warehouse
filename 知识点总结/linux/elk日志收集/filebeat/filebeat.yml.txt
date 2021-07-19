@@ -1,0 +1,22 @@
+filebeat.prospectors:
+#7.1版本是用下面这个
+#filebeat.inputs:
+- type: log
+  enabled: true
+  paths:
+    - /日志路径/*.log
+  fields:
+    service: zmweb_stable
+    ip: 10.85.122.49
+    language: java
+    env: out
+  fields_under_root: true
+  multiline.pattern: ^\[\d{4}-\d{1,2}-\d{1,2}
+  multiline.negate: true
+  multiline.match: after
+  ignore_old: 5m
+
+output.logstash:
+  hosts: ["10.82.193.49:5044"]
+
+name: filebeat-49

@@ -1,0 +1,10 @@
+setnx key value nx
+
+解锁lua
+eval "if redis.call('get', KEYS[1]) == ARGV[1]\nthen\nreturn redis.call('del', KEYS[1])\nelse\nreturn 0\nend" 1 key value
+
+
+主从模式下，从还没同步到锁，主就挂了，会存在锁丢失的情况
+解决方案：redlock
+起5台redis，业务服依次去5台redis尝试获取锁，获得(5/2 + 1 = 3)台以上redis的锁才被判为上锁成功，如果上锁成功，则立即释放已获得的锁
+如果其中某一台挂了，需要延迟启动、或延迟接收请求，直到超过锁的有效期。这样保证了锁不会被二次获得，且一台挂了，分布式锁还是可用

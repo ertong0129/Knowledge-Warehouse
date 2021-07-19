@@ -1,0 +1,3 @@
+删除某个索引下的文档
+DELETE方式
+http://localhost:9200/testIndex/_doc/aaa

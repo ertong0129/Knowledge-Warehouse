@@ -1,0 +1,5 @@
+# ManagementService
+
+- createDeadLetterJobQuery
+- deleteDeadLetterJob
+

@@ -1,0 +1,112 @@
+****************************************
+*按安全基线检查结果，调整防火墙设置。  * 
+****************************************
+调整步骤：
+
+A.备份
+sudo -s 
+cd  
+cp ipt_save.def ipt_save.def.20190522
+
+B.查看业务端口（主要配置私网访问，其他按照上面配置即可）
+一般：业务服端口，mysql端口，redis端口，rsync端口
+netstat -ptln
+检查端口连接情况：
+netstat -ptan|grep '127.0.0.1:3306'
+
+C.编辑ipt_save.def
+
+D.保存生效
+#配置即时生效命令
+iptables-restore < /root/ipt_save.def
+
+查看防火墙规则
+iptables -L -n -v --line-numbers
+
+#公网开放端口访问
+iptables -A INPUT -s 0.0.0.0/0 -p tcp -m tcp --dport 13052 -j ACCEPT
+
+#扩展：docker设置为私网访问
+iptables -nvL --line-numbers
+iptables -t nat -nvL DOCKER --line-numbers
+iptables -L DOCKER -n --line-number
+iptables -R DOCKER 1 -p tcp -m tcp -s 10.0.0.0/8 --dport 3306 -j ACCEPT
+
+
+****************************************
+*    iptable常用命令学习			   * 
+****************************************
+#参考文献
+https://cnzhx.net/blog/common-iptables-cli/#11
+
+#基本命令
+查看防火墙规则
+iptables -L -n -v --line-numbers
+
+增删改查规则
+iptables -A chain firewall-rule
+
+iptables -D chain firewall-rule
+
+iptables -I chain [rulenum] firewall-rule
+
+iptables -R chain [rulenum] firewall-rule
+
+清空
+iptables -F [chain]
+iptables -Z [chain [rulenum]]
+iptables -X [chain]
+
+修改策略
+iptables -P chain target
+
+iptables -E old-chain new-chain
+
+特殊参数
+-S 代表源地址（SOURCE）
+-D 代表目的地址（DESTINATION）
+-J 代表跳转（TARGET）
+-I 代表 IN INTERFACE（入站接口）
+-O 代表 OUT INTERFACE（出站接口）
+
+#设置防火墙步骤及常用命令
+1.备份
+service iptables save
+cp /etc/sysconfig/iptables /etc/sysconfig/iptables.20190522
+
+2.清空已有规则
+iptables -F
+
+#3.仅允许 SSH （生产环境慎选）
+#iptables -A INPUT -i eth0 -p tcp --dport 22 -j ACCEPT
+
+4.常见规则设置方案 （TODO补充）
+# 一般
+（1）vi /etc/sysconfig/iptables 
+（2）添加规则，常见规则如下
+iptables -A INPUT -m state –state NEW -m tcp -p tcp –dport 80 -j ACCEPT        　　 
+iptables -I INPUT -s 113.106.93.110 -p tcp --dport 8089 -j DROP                      　　　#禁止指定IP访问 8089
+iptables -I INPUT -s 113.106.93.110 -p tcp --dport 8080 -j ACCEPT                 　　　#开放固定ipIP访问 8080
+iptables -A INPUT -s 124.43.62.96/27 -p all -j ACCEPT    #允许办公室的ip段连接
+iptables -A INPUT -s 192.168.1.0/24 -p all -j ACCEPT    #允许其他机房的网段链接
+iptables -A INPUT -p tcp --dport 443 -j ACCEPT    #允许业务端口对外提供链接
+
+iptables -A INPUT -p icmp -m icmp --icmp-type any -j ACCEPT      #允许所有人ping
+
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT      #允许关联包通过
+iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+（3）重启
+#重启防火墙使配置文件生效  
+systemctl restart iptables.service
+#设置iptables防火墙为开机启动项 
+systemctl enable iptables.service
+service iptables  start      #启动服务
+service iptables  stop　　   #停止服务
+service iptables  restart　　#重启服务
+
+5.最后一条（丢弃所有其他包）
+iptables -A INPUT -j DROP
+
+6.检查一遍
+iptables -L -n -v --line-numbers

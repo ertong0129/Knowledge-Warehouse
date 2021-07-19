@@ -1,0 +1,23 @@
+1.while循环，满足条件就一直执行
+while [ aa != "Y" ]
+do
+    逻辑语句
+done
+
+2.until循环，满足条件才退出循环
+until [ aa == "Y"]
+do
+    逻辑语句
+done
+
+3.for in 循环，遍历数组
+for index in 1 2 3
+do
+    逻辑语句
+done
+
+4.for循环
+for ((i=1;i<=200;i++));
+do
+    逻辑语句
+done

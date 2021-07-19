@@ -1,0 +1,12 @@
+jvm启动参数
+-Xmx：最大堆内存
+-Xms：启动堆内存
+-Xmn：新生代内存
+-XX:SurvivorRatio：Eden和Survivor区的比例
+-Xloggc:file：将垃圾回收日志打印到指定文件
+-XX:MetaspaceSize：方法区大小
+-XX:+PrintGCDetails：打印gc详情
+-XX:+PrintGC：打印gc日志
+-XX:+PrintGCApplicationStoppedTime：打印GC时，应用程序在安全点停止的时间
+-XX:+PrintGCTimeStamps： 显示从JVM启动时算起的运行时间
+-XX:+PrintGCDateStamps： 在每条记录前加上日期时间.

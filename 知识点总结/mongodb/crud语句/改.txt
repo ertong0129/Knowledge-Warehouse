@@ -1,0 +1,2 @@
+db.collection.update(<query>,<update>,<option>)
+query：更新条件，update：更新值，option：{upsert：如果不存在记录，是否插入新值，multi：是否改动多个记录}

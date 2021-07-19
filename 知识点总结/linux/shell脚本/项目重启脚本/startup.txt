@@ -1,0 +1,362 @@
+#!/bin/bash
+
+#--------------------------------------------
+#这是一个通用node项目和java的 springboot 和 thrift 项目版本启停控制脚本
+#功能：启动项目、停止项目、重启项目、运行状态查询、版本检测
+#特殊：全自动远程控制，可以无参启动最新版本，也可以指定启动任意版本
+#作者：zhangxiangming
+#时间：2019年1月9日
+#--------------------------------------------
+#版本：1.0.0
+#时间：2019年3月4日
+#--------------------------------------------
+
+#export JAVA_HOME=/usr/java/jdk1.8.0_77
+#export PATH=$JAVA_HOME/bin:$PATH
+#export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+source /etc/profile
+java -version
+
+###################变量区######################
+
+#[变量] 读取startup文件夹下的配置信息
+cd "$(dirname "$0")"
+app_path=`cd $(dirname $0); pwd -P`
+app_name=`cat config.ini |grep -v '#' | grep app_name | cut -d"=" -f2-`
+java_options=`cat config.ini |grep -v '#' | grep java_options | cut -d"=" -f2-`
+app_param=`cat config.ini |grep -v '#' | grep app_param | cut -d"=" -f2-`
+environment=`cat config.ini |grep -v '#' | grep environment | cut -d"=" -f2-`
+ip=`cat config.ini |grep -v '#' | grep ip | cut -d"=" -f2-`
+app_type=`cat config.ini |grep -v '#' | grep app_type | cut -d"=" -f2-`
+auto_refresh=`cat config.ini |grep -v '#' | grep auto_refresh | cut -d"=" -f2-`
+server_addr=`cat config.ini |grep -v '#' | grep server_addr | cut -d"=" -f2-`
+node_cmd=`cat config.ini |grep -v '#' | grep node_cmd | cut -d"=" -f2-`
+
+#[变量] 接收命令输入的第二个参数作为版本号
+version=$2
+#[变量] 最新版本号
+lastest_version=''
+#[变量] 当前运行的版本号
+running_version=''
+
+#项目类型参数校验
+if [[ ! ${app_type} ]];
+then
+  echo "app_type 为空"
+  exit 0;
+fi
+if [[ ${app_type} != 'node' ]] && [[ ${app_type} != 'springboot' ]] && [[ ${app_type} != 'thrift' ]];
+then
+  echo "项目类型 ${app_type} 未知"
+  exit 0;
+fi
+
+#输出配置和参数信息
+echo -e "配置："${app_name}"，"${app_path} "，"${environment}"，"${app_type}"\n参数："$1"，"$2""
+
+###################私有方法区######################
+
+#[方法] 设置需要运行的版本号，如果命令输入的第二个参数未指定，则使用文件version指定的最新版本号
+#private
+set_version() {
+  if [[ ! ${app_name} ]];
+  then
+    echo "app_name 为空"
+    exit 0;
+  fi
+  if [[ ! $version ]]; then
+    version=`cat ${app_path}/version |tr -cd "[0-9]"`
+  fi
+}
+
+#[方法] 设置需要运行的版本号，如果命令输入的第二个参数未指定，则使用当前运行中的版本号，如果也没有当前运行中的版本，则使用文件version指定的最新版本号
+#private
+set_run_version() {
+  if [[ ! ${app_name} ]];
+  then
+    echo "app_name 为空"
+    exit 0;
+  fi
+  if [[ ! $version ]]; then
+    tmp=`ps -ef|grep "${app_path}/" |grep -E ".jar|.js" |tail -n 1|tr -cd "[0-9]"`
+    version=${tmp:0-12:12}
+  fi
+  if [[ ! $version ]]; then
+    version=`cat ${app_path}/version |tr -cd "[0-9]"`
+  fi
+}
+
+#[方法] 设置当前项目运行状态信息
+#private
+set_info() {
+  if [[ ! ${app_name} ]];
+  then
+    echo "app_name 为空"
+    exit 0;
+  fi
+  #最新版本号
+  lastest_version=`cat ${app_path}/version |tr -cd "[0-9]"`
+  #当前运行的版本号
+  tmp=`ps -ef|grep "${app_path}/" |grep -E ".jar|.js" |tail -n 1|tr -cd "[0-9]"`
+  running_version=${tmp:0-12:12}
+}
+
+###################对外方法区######################
+
+#[方法] 显示当前项目运行状态
+#public
+info() {
+  if [[ ! ${app_name} ]];
+  then
+    echo "app_name 为空"
+    exit 0;
+  fi
+  set_info
+  echo -e "${app_name}\n当前运行版本: ${running_version}\n本地最新版本: ${lastest_version}"
+}
+
+#[方法] 启动项目
+#public
+start() {
+  if [[ ! ${app_name} ]];
+  then
+    echo "app_name 为空"
+    exit 0;
+  fi
+  set_version
+  set_info
+  #如果当前已经有运行中的版本，则退出，并提示需要调用restart方��
+  if [ $running_version ]; then
+    echo -e "${app_name}正在运行...\n当前运行版本: ${running_version}\n本地最新版本: ${lastest_version}\n如有需要, 请调用restart方法"
+    exit 0;
+  fi
+  #如果当前没有运行中的版本，则进入项目根目录，解压并启动项目
+  cd $app_path
+  #如果需要运行的版本号文件夹不存在，则将版本号对应的zip包的解压
+  if [[ ! -d $version ]];then
+    if [[ ! -f ${version}.zip ]]; then
+      #版本号zip文件不存在
+      echo "版本号${version}对应的zip包文件不存在"
+      exit 0;
+    fi
+    unzip ${version}.zip -d ${version}
+  fi
+  #进入版本号目录，启动项目
+  cd ${app_path}/${version}
+  if [[ ${app_type} == 'springboot' ]]; then
+    app_param=${app_param//'${version}'/${version}}
+    java ${java_options} -jar ${app_path}/${version}/${app_name}.jar --spring.profiles.active=${environment} ${app_param} ${version} >/dev/null 2>&1 &
+  elif [[ ${app_type} == 'thrift' ]]; then
+    java ${java_options} -jar -Denv=${environment} ${app_path}/${version}/${app_name}.jar ${app_path}/${version}/${app_name}.jar >/dev/null 2>&1 &
+  elif [[ ${app_type} == 'node' ]]; then
+    pm2 start ${node_cmd}
+  fi
+  echo -e "${app_name} ${version} 启动完成"
+}
+
+#[方法] 重启项目
+#public
+restart() {
+  if [ ! ${app_name} ];
+  then
+    echo "app_name 为空"
+    exit 0;
+  fi
+  set_run_version
+  set_info
+  #如果需要运行的版本号文件夹不存在，则将版本号对应的zip包的解压
+  cd $app_path
+  if [[ ! -d $version ]];then
+    if [[ ! -f ${version}.zip ]]; then
+      #版本号zip文件不存在
+      echo "版本号${version}对应的zip包文件不存在"
+      exit 0;
+    fi
+    unzip ${version}.zip -d ${version}
+  fi
+  #如果当前已经有运行中的版本，则提示将重启指定版本号
+  if [[ $running_version ]]; then
+    echo -e "${app_name}正在运行...\n当前运行版本: ${running_version}\n即将启动版本: ${version}\n原��本将停止"
+  fi
+  #停止项目
+  stop
+  #进入版本号目录，启动项目
+  cd ${app_path}/${version}
+  if [[ ${app_type} == 'springboot' ]]; then
+    app_param=${app_param//'${version}'/${version}}
+    java ${java_options} -jar ${app_path}/${version}/${app_name}.jar --spring.profiles.active=${environment} ${app_param} ${version} >/dev/null 2>&1 &
+  elif [[ ${app_type} == 'thrift' ]]; then
+    java ${java_options} -jar -Denv=${environment} ${app_path}/${version}/${app_name}.jar ${app_path}/${version}/${app_name}.jar >/dev/null 2>&1 &
+  elif [[ ${app_type} == 'node' ]]; then
+    pm2 start ${node_cmd}
+  fi
+  echo -e "${app_name} ${version} 重启完成"
+}
+
+#[方法] 停止项目
+#public
+stop() {
+  if [[ ! ${app_name} ]];
+  then
+    echo "app_name 为空"
+    exit 0;
+  fi
+  if [[ ${app_type} == 'springboot' ]] || [[ ${app_type} == 'thrift' ]]; then
+    running_process=`ps -ef | grep "${app_path}/"  | grep "${app_name}.jar" | grep -v 'grep' | awk '{print $2}'`
+    if [[ $running_process ]]; then
+      kill -9 $running_process
+      echo "进程 ${running_process} 停止完成"
+    fi
+  elif [[ ${app_type} == 'node' ]]; then
+    pm2 delete ${app_name}
+    echo "应用 ${app_name} 停止完成"
+  fi
+
+}
+
+#[方法] 项目版本检测
+#public
+let check_count=11
+check() {
+  if [[ ${check_count} -le 0 ]];
+  then
+    echo "检测循环结束"
+    exit 0;
+  fi
+  let check_count-=1
+  if [[ ! ${app_name} ]];
+  then
+    echo "app_name 为空"
+    #再次检测
+    sleep 5
+    check
+  fi
+  set_info
+  #如果不是自动更新，则检测是否需要运行某版本
+  if [[ ${auto_refresh} == 'false' ]];
+  then
+    runcheck
+  fi
+  if [[ $lastest_version ]]; then
+    if [[ ! -f ${app_path}/${lastest_version}.zip ]]; then
+      #版本号zip文件不存在
+      echo "版本号${version}对应的zip包文件不存在"
+      #再次检测
+      sleep 5
+      check
+    fi
+    if [[ $running_version ]]; then
+      if [[ "${lastest_version}" == "${running_version}" ]]; then
+        echo -e "${app_name}\n本地最新版本与当前运行版本一致，都是${lastest_version}"
+        #再次检测
+        sleep 5
+        check
+      fi
+      #如果存在运行中版本，且与本地最新版本不同，则说明有新版本发布到服务器了，如果自动更新设置为true，则重启应用，不上报版本
+      echo -e "发现新版本："${app_name}"，"${app_path}"，"${environment}"，"${app_type}"，"${lastest_version}"，"${running_version}"，"${zip_file_size}""
+      if [[ ${auto_refresh} == 'true' ]];
+      then
+        echo "设置为自动更新，重启应用，不上报版本"
+        version=`cat ${app_path}/version |tr -cd "[0-9]"`
+        restart
+        #再次检测
+        sleep 5
+        check
+      fi
+      #如果自动更新设置为false，则进入下一个语句上报版本
+    fi
+    if [ ${auto_refresh} == 'true' ];
+    then
+      echo "设置为自动更新，不上报版本"
+      #再次检测
+      sleep 5
+      check
+    fi
+    #获取已上报的版本
+    report_version=`cat ${app_path}/report_version |tr -cd "[0-9]"`
+    #本地最新版本与已上报的版本一致，则不用再上报
+    if [[ $report_version ]]; then
+      if [[ "${lastest_version}" == "${report_version}" ]]; then
+        echo -e "${app_name}\n本地最新版本与本地已上报版本一致，都是${lastest_version}"
+        #再次检测
+        sleep 5
+        check
+      fi
+    fi
+    #获取zip包大小
+    zip_file_size=`ls -l ${app_path}/${lastest_version}.zip|awk '{print $5}'`
+    #准备上报版本
+    echo -e "新版本："${app_name}"，"${app_path}"，"${environment}"，"${app_type}"，"${lastest_version}"，"${running_version}"，"${zip_file_size}""
+    #拼接请求数据
+    param=$(base64<<<"{'app_name':'"${app_name}"','ip':'"${ip}"','environment':'"${environment}"','app_path':'"${app_path}"','app_type':'"${app_type}"','new_version':'"${lastest_version}"','running_version':'"${running_version}"','zip_file_size':'"${zip_file_size}"'}")
+    #上报版本
+    result=`curl -X GET --connect-timeout 10 -m 20 -G --data-urlencode "versionData=${param}" "${server_addr}/app/version/report"`
+    #如果上报成功，则写入本地已上报版本
+    echo ${result}
+    if [[ $result ]]; then
+      result_tmp=`echo ${result} |grep -Po '"code":1,'`
+      if [[ $result_tmp ]]; then
+        echo "${lastest_version}" > ${app_path}/report_version
+        #自动更新一下shell脚本
+        wget http://10.32.4.5:8888/shell/formal/startup.sh -O ${app_path}/startup_new.sh
+        new_file_size=`ls -l ${app_path}/startup_new.sh|awk '{print $5}'`
+        if [[ $new_file_size -gt 0 ]]; then
+          mv ${app_path}/startup_new.sh ${app_path}/startup.sh
+          chmod 744 ${app_path}/startup.sh
+        fi
+        #再次检测
+        sleep 5
+        check
+      fi
+    fi
+    #再次检测
+    sleep 5
+    check
+  fi
+
+}
+
+#[方法] 项目运行检测
+#调用zmapi接口，检测��断是否有需要执行更新的版本，如果有则restart指定版本
+#public
+runcheck() {
+  if [[ ! ${app_name} ]];
+  then
+    echo "app_name 为空"
+    exit 0;
+  fi
+  if [[ ${auto_refresh} == 'true' ]];
+  then
+    echo "设置为自动更新，不再做运行检测"
+    exit 0;
+  fi
+  #拼接请求数据
+  param=$(base64<<<"{'app_name':'"${app_name}"','ip':'"${ip}"','environment':'"${environment}"'}")
+  result=`curl -X GET --connect-timeout 10 -m 20 -G --data-urlencode "versionData=${param}" "${server_addr}/app/version/runcheck"`
+  #如果返回code为1，且存在版本数据，则重启指定版本
+  echo ${result}
+  if [[ $result ]]; then
+    result_tmp=`echo ${result} |grep -Po '"code":1,'`
+    if [[ $result_tmp ]]; then
+      #重启应用指定版本
+      version_tmp=`echo ${result} |tr -cd "[0-9]"`
+      version=${version_tmp:1:12}
+      echo "${app_name}准备运行版本：${version}"
+      restart
+    fi
+  fi
+}
+
+###################程序入口######################
+
+case "$1" in
+    info) info;;
+    start) start ;;
+    restart) restart;;
+    stop) stop;;
+    check) check;;
+    runcheck) runcheck;;
+    *) echo -e "Usage: $0 {info|start|restart|stop|check|runcheck}\ninfo\t查看当前运行版本和最新版本\nstart [版本号]\t在未启动项目的前提下启动项目(无版本号参数时默认为最新版本)\nrestart [版本号]\t重启项目(无版本号参数时默认为当前运行版本，如无运行中版本则用最新版本)\nstop\t停止项目\ncheck\t检测新版本(发现运行版本与最新版本不一致，则上报新版本)\nruncheck\t项目运行检测(如果发现待运行版本，则重启指定版本)"
+    exit 1;
+    ;;
+esac

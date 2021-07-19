@@ -1,0 +1,54 @@
+1.1在线安装jdk
+apt-get install openjdk-8-jdk
+
+1.2离线安装jdk
+我们是固定jdk版本，所以直接将jdk包传输到服务器上，解压后配置/etc/profile文件即可
+export JAVA_HOME=/opt/jdk1.8.0_101
+export PATH=$JAVA_HOME/bin:$PATH
+export CLASSPATH=.:$JAVA_HOME/lib/tools.jar
+
+2.1在线安装jenkins（因内网机无法联网，所以没试过）（官网教程）
+wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo apt-key add -
+echo "deb https://pkg.jenkins.io/debian-stable binary/" >>  /etc/apt/sources.list
+sudo apt-get update
+sudo apt-get install jenkins
+
+2.2离线安装jenkins
+从下面网址下载安装包
+http://ftp.yz.yamagata-u.ac.jp/pub/misc/jenkins/debian-stable/
+传输到服务器上dpkg -i 安装包即可
+可能会出现问题
+No Java executable found in current PATH: /bin:/usr/bin:/sbin:/usr/sbin
+解决方法：建立软连接：ln -s /usr/java/jdk1.8/bin/java /usr/bin/java（换成自己的jdk路径）
+
+3.安装插件
+内网无法安装插件，只能外网安装环境，安装插件后将plugins文件夹整个拷到内网
+一般只安装推荐插件和svn插件即可
+国内插件源：
+https://mirrors.tuna.tsinghua.edu.cn/jenkins/updates/update-center.json
+
+4.【jenkins迁移】将项目导入jenkins
+jenkins->系统管理->jenkins命令行接口（jenkins-cli）中下载jenkins-cli.jar
+从旧jenkins服中将项目导出（项目多考虑写个脚本循环导出）
+java -jar jenkins-cli.jar -s http://127.0.0.1:8080/ -auth 用户名:密码 get-job 项目名 > 项目名.xml
+将项目导入新jenkins服，首先将项目名.xml文件移到jobs文件夹下，然后
+java -jar jenkins-cli.jar -s http://127.0.0.1:8080/ -auth 用户名:密码 create-job 项目名 < 项目名.xml
+导入项目的脚本可看multi_create_job.sh
+
+5.配置ssh免登录
+在新jenkins服上，先查看jenkins的启动用户（如果是一键安装的，就是jenkins）
+切换到启动用户执行ssh-keygen命令，将id_rsa.pub文件复制到业务服/root/.ssh/authorized_keys文件中
+修改业务服/etc/ssh/sshd_config，在AllowUsers中添加新服务器
+重启业务服ssh服务，/etc/init.d/ssh restart
+测试新服是否可以连上业务服（业务服ssh端口一般是45222）ssh root@ip -p 45222
+
+附：踩过的坑
+1.gradle构建失败
+jenkins服先安装gradle agt-get install gradle
+查看项目路径下build.gradle指定的jdk目录，将jenkins服下的jdk复制一份到那个目录下，否则会构建失败
+
+2.项目构建失败，无法从svn拉取代码（没有添加svn账号密码或没有配置使用正确的凭据）
+添加凭据：
+jenkins->系统管理->Manage Credentials->找下页面上的凭据按钮->系统->全局凭据->添加凭据->添加svn账号密码
+项目填写凭据：
+项目->配置->源码管理->Modules->Credentials选择凭据

@@ -1,0 +1,101 @@
+1.字符串类型
+（1）string：从ElasticSearch 5.x开始不再支持string，由text和keyword类型替代
+（2）text：当一个字段是要被全文搜索的，比如Email内容、产品描述，应该使用text类型。设置text类型以后，字段内容会被分析，在生成倒排索引以前，字符串会被分析器分成一个一个词项。text类型的字段不用于排序，很少用于聚合。
+（3）keyword：keyword类型适用于索引结构化的字段，比如email地址、主机名、状态码和标签。如果字段需要进行过滤(比如查找已发布博客中status属性为published的文章)、排序、聚合。keyword类型的字段只能通过精确值搜索到。
+个人理解：使用match搜索的时候，如搜索content:得意奥，text字段搜得、意、得意、得意奥都能搜出来（创建了多个索引），keyword字段只有搜得意奥才能搜出来（只创建了一个索引）
+
+2.整数类型
+（1）byte：-128~127
+（2）short：-32768~32767
+（3）integer：-2^31~2^31-1
+（4）long：-2^63~2^63-1
+
+3.浮点类型
+（1）doule：64位双精度IEEE 754浮点类型
+（2）float：32位单精度IEEE 754浮点类型
+（3）half_float：16位半精度IEEE 754浮点类型
+（4）scaled_float：缩放类型的的浮点数
+对于float、half_float和scaled_float,-0.0和+0.0是不同的值，使用term查询查找-0.0不会匹配+0.0，同样range查询中上边界是-0.0不会匹配+0.0，下边界是+0.0不会匹配-0.0
+
+4.date类型
+（1）日期格式的字符串，比如 “2018-01-13” 或 “2018-01-13 12:10:30”
+（2）long类型的毫秒数( milliseconds-since-the-epoch，epoch就是指UNIX诞生的UTC时间1970年1月1日0时0分0秒)
+（3）integer的秒数(seconds-since-the-epoch)
+ElasticSearch 内部会将日期数据转换为UTC，并存储为milliseconds-since-the-epoch的long型整数
+
+5.boolean类型
+逻辑类型（布尔类型）可以接受true/false/”true”/”false”值
+
+6.binary类型
+二进制字段是指用base64来表示索引中存储的二进制数据，可用来存储二进制形式的数据，例如图像。默认情况下，该类型的字段只存储不索引。二进制类型只支持index_name属性。
+
+7.array类型
+在ElasticSearch中，没有专门的数组（Array）数据类型，但是，在默认情况下，任意一个字段都可以包含0或多个值，这意味着每个字段默认都是数组类型，只不过，数组类型的各个元素值的数据类型必须相同。在ElasticSearch中，数组是开箱即用的（out of box），不需要进行任何配置，就可以直接使用。
+在同一个数组中，数组元素的数据类型是相同的，ElasticSearch不支持元素为多个数据类型：[ 10, “some string” ]，常用的数组类型是：
+（1）字符数组: [ “one”, “two” ]
+（2）整数数组: productid:[ 1, 2 ]
+（3）对象（文档）数组: “user”:[ { “name”: “Mary”, “age”: 12 }, { “name”: “John”, “age”: 10 }]，ElasticSearch内部把对象数组展开为 {“user.name”: [“Mary”, “John”], “user.age”: [12,10]}
+
+8.object类型
+JSON天生具有层级关系，文档会包含嵌套的对象，如：
+    "employee":{
+        "age":30,
+        "fullname":{
+            "first":"hadron",
+            "last":"cheng"
+         }
+    }
+
+9.ip类型
+ip类型的字段用于存储IPv4或者IPv6的地址
+
+字段值为text的时候，可以设置分词器，如：
+       "content": {
+            "type": "text",
+            "analyzer":"ik_max_word",
+            "search_analyzer":"ik_max_word"
+        },
+
+或者修改索引的默认分词
+PUT /index_name
+{
+    "settings" : {
+        "index" : {
+            "analysis.analyzer.default.type": "ik_max_word"
+        }
+    }
+}
+
+设置索引字段属性的方法：
+创建索引并配置：
+PUT /index_name/_settings
+{
+    "number_of_shards": 3,//数据分片，默认值为5
+    "number_of_replicas": 0//数据备份数，如果只有一台机器，建议设置为0，避免索引一直处于yellow状态
+}
+定义字段：
+PUT /index_name/_mapping?pretty
+{
+    "properties": {
+        "my_id": {
+            "type": "long"
+        },
+        "content": {
+            "type": "text"
+        },
+        "money": {
+            "type": "scaled_float",
+            "scaling_factor": 100
+        },
+        "customer": {
+            "type": "keyword"
+        },
+        "sync": {
+            "type": "boolean"
+        },
+        "create_time": {
+            "type": "date",
+            "format": "yyyy-MM-dd HH:mm:ss"
+        }
+    }
+}

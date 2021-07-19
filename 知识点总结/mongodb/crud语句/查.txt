@@ -1,0 +1,7 @@
+查：db.collection.find().skip().limit().sort({key:1}).pretty()
+find()里写搜索条件，如find({title:xxx})，skip(n)跳过前n条数据，limit(n)只查询n条数据，sort()根据某个键排序1升序，-1降序
+
+模糊查询：客户端为：find({name:/^key$/})，nodejs中需构建正则表达式对象，为{name:new RegExp('^key$')}
+
+聚合查：db.collection.aggregate([{$group:{_id:'$name',num:{$sum:1}}}])
+_id是固定名，num是可改名，聚合方式有：$sum，$avg，$max，$min

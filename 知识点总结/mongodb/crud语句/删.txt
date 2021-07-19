@@ -1,0 +1,2 @@
+db.collection.remove(<query>,<option>)
+query：删除条件，option：{justOne：是否只删除一个}

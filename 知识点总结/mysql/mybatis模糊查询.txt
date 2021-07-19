@@ -1,0 +1,16 @@
+mybatis模糊查询：
+1.使用${...}
+field_name like '%${field_name}%'
+注意点：$参数是直接注入的，大括号里不能注明jdbcType。可能会有sql注入问题
+
+2.使用#{...}
+field_name like "%"#{field_name,jdbcType=VARCHAR}"%"
+因为#{...}解析成sql语句时候，会在变量外侧自动加单引号'  '，
+所以这里 % 需要使用双引号"  "，不能使用单引号 '  '，不然会查不到任何结果
+
+3.使用CONCAT()函数连接参数
+field_name like CONCAT('%',#{field_name,jdbcType=VARCHAR},'%')
+
+4.使用bind 
+<bind name="like_field_name" value="'%'+field_name+'%'" />
+field_name like #{like_field_name}

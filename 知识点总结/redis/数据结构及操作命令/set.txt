@@ -1,0 +1,54 @@
+set：是 string 类型的无序集合。集合成员是唯一的
+redis 中集合是通过哈希表实现的，所以添加，删除，查找的复杂度都是 O(1)
+集合中最大的成员数为 232 - 1 (4294967295, 每个集合可存储40多亿个成员)
+
+以下示例中，key为set的名称
+命令示例：
+1.sadd member1 [member2...]
+向集合添加一个或多个值
+
+2.scard key
+获取集合的值的数量
+
+3.sdiff key1 [key2...]
+获取集合key1与其他集合之间的差异，即只存在集合key1中，不存在其他集合中的值
+
+4.sdiffstore destination key1 [key2...]
+获取集合key1与其他集合之间的差异，即只存在集合key1中，不存在其他集合中的值，并存到集合destination中
+
+5.sinter key1 [key2...]
+获取所有集合的交集，即存在于所有集合中的值
+
+6.sinterstore destination key1 [key2...]
+获取所有集合的交集，即存在于所有集合中的值，并存到集合destination中
+
+7.smembers key
+获取集合中所有的值
+
+8.smove source destination member
+将值member从source集合移动到destination集合，如果值不存在与source集合，则无操作
+
+9.spop key 
+移除并返回集合中的一个随机元素
+
+10.srandmember key [count]
+获取集合中一个或多个随机值
+
+11.srem key member1 [member2...]
+移除集合中一个或多个值
+
+12.sunion key1 [key2...]
+获取所有集合的并集
+
+13.sunion destination key1 [key2...]
+获取所有集合的并集，并存到集合destination中
+
+14.sscan key cursor [MATCH pattern] [COUNT count]
+scan命令是一个基于游标的迭代器, 每次被调用都需要使用上一次这个调用返回的游标作为该次调用的游标参数，以此来延续之前的迭代过程, 
+cursor游标参数被设置为 0 时， 服务器将开始一次新的迭代， 而当服务器向用户返回值为 0 的游标时， 表示迭代已结束
+pattern：正则表达式
+count：查询数量，默认为10（数据量小的时候不生效，是个坑）
+返回值：
+1)"0"：下次查询起始游标
+2)1)"aab"：值
+   2)"1"：分数

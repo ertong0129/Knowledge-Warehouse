@@ -1,0 +1,73 @@
+#!/bin/bash
+#$1：占位符，$2：一次扫描的数量，$3：选择的库，$4：密码
+#使用前注意阅读脚本，看看是否需要打开sleep的注释，否则可能影响项目连接redis
+
+A=$0
+B=${A##*/}
+C=${B%.*}
+running_file_name=$C
+running_flag="run.$running_file_name"
+#步长
+STEP=$2
+#选择的库
+SELECT_DB=$3
+#密码
+PASSWORD=$4
+#键数组，以空格隔开
+KEY_ARRAY=("key1*" "key2*");
+
+REDIS_CLIENT="redis-cli -h 127.0.0.1 -n $SELECT_DB -a $PASSWORD -p 6379 -x"
+function process {
+    echo "[$(date "+%Y-%m-%d %H:%M:%S")] 执行脚本$0，统计$1，进入方法体" >> keycount.log
+    index=-1
+    count=0
+    step=$STEP
+    if [ -f "$running_flag" ] ; then
+        echo "有程序正在运行中，或锁文件未正确删除，检查$running_flag文件是否存在"
+        exit 0
+    fi
+    touch $running_flag
+    while ((index!=0))
+    do
+      if [ $index -le 0 ];then
+        index=0
+      fi
+      echo "[$(date "+%Y-%m-%d %H:%M:%S")] 执行统计循环，统计$1，当前index：$index" >> keycount.log
+      echo "scan $index match $1 count $step" | $REDIS_CLIENT > $running_file_name.cache
+      read index <<< `head -1 $running_file_name.cache`
+      read inc <<< `cat $running_file_name.cache | wc -l`
+      inc=$((inc - 1))
+      if [ $? -ne 0 ];then
+        echo "[$(date "+%Y-%m-%d %H:%M:%S")] 程序异常终止，$0" >> keycount.log
+        break
+      fi
+      count=$((count + inc))
+      #sleep 1
+    done
+    echo "$1 count:"$count
+    echo "$1 count:"$count >> keycount.log
+    echo "$1 count:"$count >> keycount.record
+    rm -rf $running_flag
+}
+#
+if [ $# -ne 4 ];then
+    echo "$0 <pars> 参数错误"
+    exit 0
+fi
+#
+#if [ -f "$running_flag" ] ; then
+#    echo "有程序正在运行中，或锁文件未正确删除，检查$running_flag文件是否存在"
+#    exit 0
+#fi
+#
+#touch $running_flag
+#
+echo "processing...."
+for KEY in ${KEY_ARRAY[@]} ;
+do
+    process $KEY
+done
+#
+#rm -rf $running_flag
+#
+echo "[$(date "+%Y-%m-%d %H:%M:%S")] ${KEY_ARRAY[@]} 统计完成!" >> keycount.log

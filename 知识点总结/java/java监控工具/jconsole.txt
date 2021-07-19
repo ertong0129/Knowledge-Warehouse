@@ -1,0 +1,2 @@
+jconsole：java自带的图形化性能监控界面，一般在windows上使用
+可以看到gc、内存使用情况等

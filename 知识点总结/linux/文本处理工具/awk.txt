@@ -1,0 +1,19 @@
+awk：以行为单位进行操作，比较灵活，可以写shell脚本
+-F fs or --field-separator fs
+指定输入文件折分隔符，fs是一个字符串或者是一个正则表达式，如-F:。
+-v var=value or --asign var=value
+赋值一个用户定义变量。
+
+变量说明：
+$0：单行全部文本
+$n：单行中以-F的表达式划分的第一个块（如：aaa bbb，则$1是aaa，$2是bbb）
+NF：一条记录的字段的数目
+NR：行数
+
+使用示例：
+输出含有关键字的行
+cat /tmp/xxx.log | awk '$0~/关键字/ {print $0}'
+统计第二个字段的和
+cat /tmp/xxx.log | awk 'sum = sum + $2 END {print sum}'
+
+

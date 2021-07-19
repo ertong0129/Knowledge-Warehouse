@@ -1,0 +1,88 @@
+arthas：Alibaba开源的java诊断工具
+开源地址：https://github.com/alibaba/arthas
+官方文档：https://alibaba.github.io/arthas
+基础教程地址：https://arthas.aliyun.com/doc/arthas-tutorials.html?language=cn&id=arthas-basics
+进阶教程地址：https://arthas.aliyun.com/doc/arthas-tutorials.html?language=cn&id=arthas-advanced
+
+安装方式：
+1.jar包安装运行方式
+wget https://alibaba.github.io/arthas/arthas-boot.jar
+2.shell脚本安装运行方式
+curl -L https://alibaba.github.io/arthas/install.sh | sh
+
+常用参数：
+
+
+命令行常用命令：
+watch：查看函数的参数、返回值、异常信息，如果有请求触发，就回打印对应的数据
+第一个参数是类名，支持通配
+第二个参数是函数名，支持通配
+示例：加入-x参数表示遍历深度
+watch demo.TestClass testMethod "{params, returnObj}" -x 2
+
+trace：打印方法内部调用路径及节点耗时
+示例：打印TestClass方法testMethod耗时大于1000ms的请求，2次
+trace demo.TestClass testMethod -n 2 "#cost > 1000"
+
+tt：记录下指定方法每次调用的入参和返回信息，并能对这些不同时间下调用的信息进行观测，然后可对监控时段内的某次调用进行回溯（重输入参）
+
+
+不常用命令：
+help：查看帮助
+
+cls：清屏
+
+reset：重置增强类，将Arthas增强过的类全部还原
+
+history：打印历史命令
+
+quit（exit）：退出当前arthas客户端，其他客户端不受影响
+
+stop（shutdown）：关闭arthas服务端，所有客户端全部退出
+
+dashboard：查看当前系统的实时数据面板
+
+thread：查看当前jvm线程堆栈信息
+
+monitor：用来监视一个时间段内指定方法执行的次数，成功，失败的次数，花费的时间
+
+jvm：查看当前jvm信息
+
+vmoption：查看、更新jvm相关参数
+
+sc：查看jvm已加载的某个类的信息（比如是不是接口，是不是抽象类等）
+-d查看类具体信息，可以使用*.?通配符
+
+sm：查看已加载类的方法信息，查找类的具体函数
+-d查看函数的具体信息
+
+jad：反编译指定已加载类的源码（用于热更新）
+示例：只打印出在反编译中的源代码
+jad --source-only com.example.demo.arthas.user.UserController
+
+redefine：重载class类，用于热更新
+
+mc：编译java代码，用于热更新
+
+classloader：查看classloader的继承树，urls，类加载信息
+
+heapdump：类似jmap，备份当前堆数据
+
+ognl：动态的执行代码
+
+
+热更步骤：
+1.反编译源码
+jad --source-only com.example.demo.arthas.user.UserController > /tmp/UserController.java
+
+2.修改源码
+vim /tmp/UserController.java
+
+3.查看源码加载器类
+sc -d *UserController | grep classLoaderHash
+
+4.保存好/tmp/UserController.java之后，使用mc(Memory Compiler)命令来编译，并且通过-c或者--classLoaderClass参数指定ClassLoader
+mc --classLoaderClass org.springframework.boot.loader.LaunchedURLClassLoader /tmp/UserController.java -d /tmp
+
+5.使用redefine命令重新加载新编译好的UserController.class
+redefine /tmp/com/example/demo/arthas/user/UserController.class

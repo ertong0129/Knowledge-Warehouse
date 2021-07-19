@@ -1,0 +1,29 @@
+#!/bin/bash
+ #使用方法：/usr/websync/crontab_shell/auto-del-15-days-ago-logs.sh
+#磁盘名称
+DISK_NAME="/dev/dm-0"
+
+#清理前已使用磁盘空间的大小
+USED_BEFORE_DEL=`df -lh|grep ${DISK_NAME}|awk '{print $3}'`
+echo "[$(date "+%Y-%m-%d %H:%M:%S")]开始执行日志自动清理任务" >>/usr/websync/crontab_shell/auto-del.log
+echo "[$(date "+%Y-%m-%d %H:%M:%S")]执行前使用大小：${USED_BEFORE_DEL}" >>/usr/websync/crontab_shell/auto-del.log
+
+source /etc/profile
+
+#zmweb日志
+find /data/logs/zmweb/ -mtime +15 -name "*-20*.log" -exec rm -rf {} \;
+
+#zmapi日志
+find /data/logs/zmapi/ -mtime +15 -name "*-20*.log" -exec rm -rf {} \;
+
+#ywweb日志
+find /raid/log4jsLogs/ywfeedback/main/ -mtime +15 -name "log_20*" -exec rm -rf {} \;
+
+#pm2日志，pm2日志只保留7天，否则磁盘不够用
+pm2 flush
+find /root/.pm2/logs/ -maxdepth 1 -mtime +7 -name "*.log" -exec rm -rf {} \;
+
+#清理后已使用磁盘空间的大小
+USED_AFTER_DEL=`df -lh|grep ${DISK_NAME}|awk '{print $3}'`
+echo "[$(date "+%Y-%m-%d %H:%M:%S")]日志自动清理任务执行完毕" >>/usr/websync/crontab_shell/auto-del.log
+echo "[$(date "+%Y-%m-%d %H:%M:%S")]执行后使用大小：${USED_AFTER_DEL}" >>/usr/websync/crontab_shell/auto-del.log

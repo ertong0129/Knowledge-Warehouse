@@ -1,0 +1,14 @@
+删除策略：
+懒删除，过期后不立即删除，而是后台100ms随机抽取一些设置了超时时间的key删除
+获取时，判断超时即删除
+
+1.noeviction：不删除
+2.allkeys-lru：在所有键中删除LRU最近最久未使用
+3.volatile-lru：从设置了过期时间的键集合中删除最近最久未使用
+4.allkeys-random：所有键随机删除
+5.volatile-random：从设置了过期时间的键中随机删除
+6.volatile-ttl：从配置了过期时间的键中删除即将过期的键
+7.volatile-lfu：从设置了过期时间的键中删除使用频率最少的键
+8.allkeys-lfu：从所有键中删除使用频率最少的键
+
+通过设置maxmemory，设置redis可使用的最大内存，否则淘汰策略不生效

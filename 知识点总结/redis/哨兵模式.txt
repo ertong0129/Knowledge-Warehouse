@@ -1,0 +1,35 @@
+哨兵模式：哨兵模式是一种特殊的模式，redis提供了哨兵的命令，哨兵是一个独立的进程，
+其原理是哨兵通过发送命令，等待redis服务器响应，从而监控运行的多个redis实例
+假设主服务器宕机，哨兵1先检测到这个结果，系统并不会马上进行failover过程，仅仅是哨兵1主观的认为主服务器不可用，这个现象成为主观下线。当后面的哨兵也检测到主服务器不可用，并且数量达到一定值时，那么哨兵之间就会进行一次投票，投票的结果由一个哨兵发起，进行failover操作。
+切换成功后，就会通过发布订阅模式，让各个哨兵把自己监控的从服务器实现切换主机，这个过程称为客观下线。
+
+启动示例：
+./redis-sentinel ../sentinel.conf
+
+参数示例：
+protected-mode no
+禁止保护模式
+
+sentinel monitor mymaster 192.168.11.128 6379 2
+配置监听的主服务器，这里sentinel monitor代表监控，mymaster代表服务器的名称，可以自定义，192.168.11.128代表监控的主服务器，6379代表端口，2代表只有两个或两个以上的哨兵认为主服务器不可用的时候，才会进行failover操作
+
+sentinel auth-pass mymaster 123456
+定义服务的密码，mymaster是服务名称，123456是redis服务器密码
+
+port
+启动哨兵进程端口
+
+dir
+哨兵进程服务临时文件夹，默认为/tmp，要保证有可写入的权限
+
+sentinel down-after-milliseconds
+指定哨兵在监控redis服务时，当redis服务在一个默认毫秒数内都无法回答时，单个哨兵认为的主观下线时间，默认为30000（30秒）
+
+sentinel failover-timeout
+指定故障切换允许的毫秒数，超过这个时间，就认为故障切换失败，默认为3分钟
+
+sentinel parallel-syncs
+指定可以有多少个redis服务同步新的主机，一般而言，这个数字越小同步时间越长，而越大，则对网络资源要求越高
+
+sentinel notification-script
+指定sentinel检测到该监控的redis实例指向的实例异常时，调用的报警脚本。该配置项可选，比较常用

@@ -1,0 +1,55 @@
+zset：是 string 类型的有序集合。集合成员是唯一的
+每个元素都会关联一个 double 类型的分数。redis 正是通过分数来为集合中的成员进行从小到大的排序
+有序集合的成员是唯一的,但分数(score)却可以重复
+集合是通过哈希表实现的，所以添加，删除，查找的复杂度都是 O(1)。 集合中最大的成员数为 232 - 1 (4294967295, 每个集合可存储40多亿个成员)
+
+命令示例：
+1.zadd key score1 member1 [score2 member2]
+向有序集合中添加一个或多个值，或更新已存在值的分数
+
+2.zcard key
+获取有序集合的成员数量
+
+3.zcount key min max
+计算有序集合中在指定分数区间的值的数量
+
+4.zincrby key increment member
+对指定值的分数加上增量increment
+
+5.zrem key member1 [member2...]
+移除有序集合中的一个或多个值
+
+6.zscore key member
+获取有序集合中指定值的分数
+
+7.zrank key member
+获取有序集合中指定值的排名（有序，排名即为在列表的第几个，分数从小到大排列）
+
+8.zrevrank key member
+获取有序集合中指定值的倒序排名（分数从大到小）
+
+9.zremrangebyrank key start stop
+移除有序集合中给定的排名区间的所有成员
+
+10.zrange key start stop [withscores]
+返回指定排名区间内所有的值
+
+11.zrevrange key start top [withscores]
+返回指定排名区间内所有的值，分数从高到低（排名从高到低）
+
+12.zinterstore destination numkeys key1 [key2...]
+将多个有序集合的交集存在新的有序集合destination中，某个值的分数为多个集合中该值分数的和
+numkeys：需要计算的有序集合的数量
+
+13.zunionstore destination numkeys key1 [key2...]
+将多个有序集合的并集存在新的有序集合destination中，某个值的分数为多个集合中该值分数的和
+
+14.zscan key cursor [MATCH pattern] [COUNT count]
+scan命令是一个基于游标的迭代器, 每次被调用都需要使用上一次这个调用返回的游标作为该次调用的游标参数，以此来延续之前的迭代过程, 
+cursor游标参数被设置为 0 时， 服务器将开始一次新的迭代， 而当服务器向用户返回值为 0 的游标时， 表示迭代已结束
+pattern：正则表达式
+count：查询数量，默认为10（数据量较少时不生效，是个坑）
+返回值：
+1)"0"：下次查询起始游标
+2)1)"aab"：值
+   2)"aaa"：值

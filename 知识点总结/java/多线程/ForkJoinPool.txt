@@ -1,0 +1,32 @@
+将一个任务，用分治的方法，使用多线程处理
+任务类需要参照以下模板
+1.继承 RecursiveTask类
+class TestTask extends RecursiveTask<T>
+2.设置3个标志
+（1）起始点 private long start;
+（2）结束点 private long end;
+（3）最小分割位 private long AAA = 2500000000L;
+3.重写compute方法
+protected T compute() {
+    if (end-start <= AAA) {
+        业务逻辑
+    } else {
+        分治处理
+        long middle = (start + end)/2;
+        TestTask startTask = new TestTask(start, middle);
+        TestTask endTask = new TestTask(middle+1, end);
+        startTask.fork();
+        endTask.fork();
+        return startTask.join() + endTask.join();
+    }
+}
+
+ForkJoinPool线程池使用示例：
+1.创建线程池，默认线程池大小为cpu数量，也可以指定
+ForkJoinPool pool = new ForkJoinPool();
+2.执行任务
+TestTask task = new TestTask(0L,100000000000L);
+pool.invoke(task);
+3.获取结果
+task.join();
+

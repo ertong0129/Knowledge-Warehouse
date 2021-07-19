@@ -1,0 +1,32 @@
+1.安装方法
+apt-get install sysstat
+
+2.参数说明
+-c 仅显示CPU统计信息.与-d选项互斥.
+-d 仅显示磁盘统计信息.与-c选项互斥
+-k 以K为单位显示每秒的磁盘请求数,默认单位块
+-p device | ALL，与-x选项互斥,用于显示块设备及系统分区的统计信息.也可以在-p后指定一个设备名
+-t 在输出数据时,打印搜集数据的时间
+-x 输出扩展信息
+
+3.数据说明
+rrqm/s: 每秒进行 merge 的读操作数目。即 rmerge/s
+wrqm/s: 每秒进行 merge 的写操作数目。即 wmerge/s
+r/s: 每秒完成的读 I/O 设备次数。即 rio/s
+w/s: 每秒完成的写 I/O 设备次数。即 wio/s
+rsec/s: 每秒读扇区数。即 rsect/s
+wsec/s: 每秒写扇区数。即 wsect/s
+rkB/s: 每秒读K字节数。是 rsect/s 的一半，因为每扇区大小为512字节。
+wkB/s: 每秒写K字节数。是 wsect/s 的一半。
+avgrq-sz: 平均每次设备I/O操作的数据大小 (扇区)。
+avgqu-sz: 平均I/O队列长度。
+await: 平均每次设备I/O操作的等待时间 (毫秒)。
+svctm: 平均每次设备I/O操作的服务时间 (毫秒)。
+%util: 一秒中有百分之多少的时间用于 I/O 操作，即被io消耗的cpu百分比
+
+4.使用说明
+一般在/etc/crontab配置个1分钟的定时任务，每次定时任务打印60次iostat的信息到文件中
+/etc/crontab文件中：
+*/1 * * * * root /bin/bash record_iostat.sh
+record_iostat.sh文件中：
+iostat -xt 1 60 >> /tmp/iostat.tmp

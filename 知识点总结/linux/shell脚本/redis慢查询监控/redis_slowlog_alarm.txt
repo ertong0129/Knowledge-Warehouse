@@ -1,0 +1,85 @@
+#!/bin/bash
+#用于检测redis慢查询的脚本，并推送告警
+#需要安装gawk、需要安装curl
+#执行redis命令行的时候，可能修改需要修改脚本中redis-cli所在文件夹的路径
+
+#本机ip、项目名称
+HOST_IP=127.0.0.1
+PROJECT_NAME=测试项目名
+#发送火星消息需要的pcode，发送火星的接口
+ALARM_PCODE=redis
+ALARM_URL=10.82.194.119:17800/sendmsg
+#推送人，推送群组，多个以,分割
+ALARM_DIGITIEDS=
+ALARM_GROUPIDS=15297
+#时间限制，超过这个时间的慢查询才会推送火星（单位μs）现在是1000ms才推
+TIME_LIMIT=1000000
+#redis端口、ip、密码
+REDIS_PORT=6379
+REDIS_IP=127.0.0.1
+REDIS_PASS=fhwhtyr6byjud53fy
+
+#慢查询日志记录文件名
+RECORD_FILE_NAME=slowlog_`date "+%Y%m%d"`.log
+#执行日志文件名
+RUN_LOG_FILE_NAME=redis_slowlog_alarm.log
+#锁文件名，防止多个脚本同时执行
+LOCK_FILE_NAME=run.lock
+#查询id缓存文件名，根据这个文件进行去重，文件的长度应该等于redis慢查询队列的长度
+ID_CACHE=record_id.cache
+ID_CACHE_LENGTH=128
+
+cd /usr/websync/zmweb_shell/redis_slowlog_alarm
+
+function format_slowlog { 
+    touch ${LOCK_FILE_NAME}
+    echo "[$(date "+%Y-%m-%d %H:%M:%S")]开始执行redis慢查询检查脚本..." >> ${RUN_LOG_FILE_NAME}
+    #记录本次新增日志的数量，记录本次推送告警的数量
+    record_count=0
+    alarm_count=0
+    #格式化慢查询日志，并赋值到数组中
+    log_array=$(/usr/local/redis/bin/redis-cli -a ${REDIS_PASS} -p ${REDIS_PORT} -h ${REDIS_IP} --no-raw slowlog get ${ID_CACHE_LENGTH} | 
+    gawk '{ if($0~/1\) \(integer\)/) {$1="";sub("^ *","");} else if($0~/2\) \(integer\)/) {gsub($3,strftime("%Y-%m-%d+%H:%M:%S",$3));sub("^ *","");} else if($0~/3\) \(integer\)/) {sub("^ *","");} else if ($0~/4\) +1\)/) {gsub(/4\)/,"  ",$0);} {print $0}}' | 
+    gawk '/^1\)/{if(s != ""){print s;}s=""};{ s=(s" "$0)};END{print s } ' | sort | uniq | 
+    sed 's/(integer)//g' | sed 's/.)/ /g' | 
+    gawk '{{s="";for(i=1;i<=NF;i++){s=(s" "$i)}} {print s}}' |
+    sed 's/\"//g' | 
+    gawk '{{s="";for(i=1;i<=NF;i++){if(i==1){s=(s"id:"$i"\"")}else if(i==2){s=(s"time:"$i"\"")}else if(i==3){s=(s"costtime:"$i"微秒\"operate:")}else{s=(s"-"$i)}}} {print s}}')
+
+    for log_tmp in ${log_array[@]};
+    do
+        id_tmp=`echo ${log_tmp} | awk -F "\"" '{print $1}' | tr -cd "[0-9]"`
+        record_num=`cat ${ID_CACHE} | grep ${id_tmp}| wc -l`
+        if [ ${record_num} -eq 0  ];then
+            echo ${id_tmp} >> ${ID_CACHE}
+            echo ${log_tmp} >> ${RECORD_FILE_NAME}
+            record_count=$((record_count+1))
+            costtime_tmp=`echo ${log_tmp} | awk -F "\"" '{print $3}' | tr -cd "[0-9]"`
+            if [ ${costtime_tmp} -gt ${TIME_LIMIT} ];then
+                alarm ${log_tmp}
+                alarm_count=$((alarm_count+1))
+            fi
+        fi
+    done
+    cat ${ID_CACHE} | tail -${ID_CACHE_LENGTH} > ${ID_CACHE}.tmp
+    mv ${ID_CACHE}.tmp ${ID_CACHE}
+    echo "[$(date "+%Y-%m-%d %H:%M:%S")]redis慢查询检查脚本执行结束，本次新增慢查询记录${record_count}条，推送告警${alarm_count}条..." >> ${RUN_LOG_FILE_NAME}
+    rm -f ${LOCK_FILE_NAME}
+}
+
+#推送火星的方法，$1是要推送的消息
+function alarm {
+    #content=echo "${PROJECT_NAME}【${HOST_IP}】提示：redis存在慢查询\n"$1 | tr -d '\n' | xxd -plain | sed 's/\(..\)/%\1/g'
+    content=${1//\"/0A}
+    content=`./urlencode.sh "${PROJECT_NAME}【${HOST_IP}】提示：redis存在慢查询0A"$content`
+    content=${content//0A/%0A}
+    #echo content
+    curl "${ALARM_URL}?digitids=${ALARM_DIGITIEDS}&groupids=${ALARM_GROUPIDS}&pcode=${ALARM_PCODE}&content=${content}"
+}
+
+if [ -f ${LOCK_FILE_NAME} ];then
+    echo "[$(date "+%Y-%m-%d %H:%M:%S")]锁文件未正确删除，或有脚本在执行中，本次脚本不执行，即将退出..." >> ${RUN_LOG_FILE_NAME}
+    exit;
+fi
+
+format_slowlog

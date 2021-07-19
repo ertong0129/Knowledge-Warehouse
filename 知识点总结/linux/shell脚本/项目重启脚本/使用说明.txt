@@ -1,0 +1,31 @@
+通用脚本，用于启动springboot、thrift、nodejs服务
+1.将startup.txt改名为startup.sh，并赋予可执行权限
+
+2.将config.txt改名为config.ini，并修改对应参数
+config.ini参数说明：
+（1）app_name：
+如果是java项目，此参数为jar包名称；
+如果是nodejs项目，（1）是指定js文件启动的，则此名称与下面参数node_cmd启动的名称（-n name）保持一致；（2）是通过pm2-config.json配置文件启动的，名称与配置文件中项目名称保持一致
+否则可能会无法重启或无法启动
+（2）ip：填当前服务器ip
+（3）environment：
+如果是java项目，（1）是springboot项目，则此参数为application-out.properties中的out；（2）是thrift服务，则此参数为config.out.properties中的out
+如果是nodejs项目，（1）项目中根据ip决定加载哪个配置文件的，此参数随便填；（2）通过pm2-config.json配置文件指定加载哪个配置文件的，此参数为env_internet中的internet
+（4）node_cmd：
+如果是指定js文件启动的，则如node_cmd=ywweb.js -i 1 -n ywweb_tw;
+-i 指定启动实例数量，-n 指定实例名称，与app_name保持一致
+如果是通过pm2-config.json配置文件启动项目的，则如node_cmd=pm2-config.json --env=internet
+--env是需要加载的配置文件环境，是pm2-config.json配置文件中env_internet中的internet
+（5）auto_refresh=true
+（6）server_addr：上报版本的地址，为当前环境下zmapi项目的地址
+（7）java_options：java启动参数
+
+3.在/etc/crontab配置定时任务
+如*/1 * * * * root /usr/websync/zmhome_en_outer/startup.sh check
+
+可能出现的问题：
+1.如果是从windows把文件上传到linux，可能会出现脚本无法启动、config.ini文件读取不对的问题
+需要看下文件的格式，将格式改为unix
+vim startup.sh或config.ini
+:set fileformat=unix
+:wq

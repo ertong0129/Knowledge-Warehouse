@@ -1,0 +1,26 @@
+Semphore：控制并发数量
+
+new Semaphore(n)：指定资格数量
+.acquire()：取得资格
+.release()：释放资格
+
+
+使用示例：
+public static void main(String[] args) {
+    Semaphore semaphore = new Semaphore(5);
+    ExecutorService fixedPool = Executors.newFixedThreadPool(10);
+    for (int i = 0; i < 10; i++) {
+        fixedPool.execute(() -> {
+            try {
+                semaphore.acquire();
+                System.out.println("执行任务");
+                Thread.sleep(1000);
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                semaphore.release();
+           }
+        });
+    }
+    fixedPool.shutdown();
+}

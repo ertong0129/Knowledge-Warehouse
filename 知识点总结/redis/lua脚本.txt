@@ -1,0 +1,44 @@
+lua脚本：
+将多个命令通过一个脚本发送，减少网络开销
+redis使用单个lua解释器去运行所有脚本，并且保证脚本会以原子性的方式去执行，当某个脚本在运行时，不会有其它脚本或者redis命令被执行
+在redis中使用脚本不会自动记录日志，需要我们在脚本使用redis.log(loglevel,message)手动保存日志信息
+loglevel：redis.LOG_DEBUG、redis.LOG_VERBOSE、redis.LOG_NOTICE、redis.LOG_WARNING
+
+命令说明：
+eval script num key1 key2 value1 value2
+执行脚本
+
+script flush
+清除脚本缓存
+
+script load 脚本
+将脚本装入缓存，不立即运行，并返回sha1校验和
+
+script exists 校验和
+根据指定脚本校验和，检查脚本是否存在缓存中
+
+script kill
+杀死当前正在运行的脚本
+
+
+redis-lua脚本参数设置：
+lua-time-limit
+脚本最大执行时间限制，默认5s
+当一个脚本执行达到最大执行时间，redis不会主动结束它，它会进行下面几个步骤：
+1.redis记录一个脚本正在超时运行
+2.redis开始重新接受其它客户端请求，但只接受执行script kill命令和shutdown nosave两个命令，若客户端执行其它命令，redis会返回busy错误
+3.如果脚本只执行过读操作，使用script kill命令可以立即停止此脚本；如果脚本执行过写操作，只允许shutdown save/nosave命令，通过停止服务器来阻止当前数据写入磁盘
+
+使用示例：
+设置键test1值为1
+eval "return redis.call('set',keys[1],argv[1])" 1 test1 1
+
+获取键test1的值
+eval "return redis.call('get',keys[1])" 1 test1
+
+使用redis-client执行
+redis-client --eval lua脚本文件 键1 键2 ; 值1 值2
+
+参考网页：
+https://www.cnblogs.com/kaituorensheng/p/11098194.html
+https://blog.csdn.net/sym542569199/article/details/88746776

@@ -1,0 +1,32 @@
+1.安装方法
+apt-get install iotop
+
+2.参数说明
+--version #显示版本号
+-h, --help #显示帮助信息
+-o, --only #显示进程或者线程实际上正在做的I/O，而不是全部的，可以随时切换按o
+-b, --batch #运行在非交互式的模式
+-n NUM, --iter=NUM #在非交互式模式下，设置显示的次数，
+-d SEC, --delay=SEC #设置显示的间隔秒数，支持非整数值
+-p PID, --pid=PID #只显示指定PID的信息
+-u USER, --user=USER #显示指定的用户的进程的信息
+-P, --processes #只显示进程，一般为显示所有的线程
+-a, --accumulated #显示从iotop启动后每个线程完成了的IO总数
+-k, --kilobytes #以千字节显示
+-t, --time #在每一行前添加一个当前的时间
+
+3.数据说明（以下参数为个人理解，因为在网上找到的资料较少，如果发现有错误请及时修正提交）
+Total DISK READ 进程和内核线程之间的总的读带宽
+Total DISK WRITE 进程和内核线程之间的总的写带宽
+Actual DISK READ 内核块设备子系统和下面硬件（HDD、SSD 等等）对应的实际磁盘读带宽
+Actual DISK WRITE 内核块设备子系统和下面硬件（HDD、SSD 等等）对应的实际磁盘写带宽
+SWAPIN 它显示进程的交换使用率
+IO 该进程等待IO的时间占他获得CPU使用权时间的百分比
+
+
+4.使用说明
+一般在/etc/crontab配置个1分钟的定时任务，每次定时任务打印60次iotop的信息到文件中
+/etc/crontab文件中：
+*/1 * * * * root /bin/bash record_iotop.sh
+record_iotop.sh文件中：
+iotop -botq --iter=60 >> /tmp/iotop.tmp

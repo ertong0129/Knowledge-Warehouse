@@ -1,0 +1,9 @@
+增有两种方式
+1.PUT方式，指定索引文档uuid
+2.POST方式，不指定索引文档uuid
+http://localhost:9200/testIndex/_doc/
+body:
+{
+    "uid":1,
+    "count":1
+}

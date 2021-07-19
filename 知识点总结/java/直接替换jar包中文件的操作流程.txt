@@ -1,0 +1,14 @@
+1.在本地用开发工具（eclipse，idea）将文件编译好，生成.class文件
+
+2.将这个.class文件上传到服务器
+
+3.在服务器上查看该文件在jar包内的目录
+jar -tvf  xxx.jar |grep xxx.class
+结果如：com/xxx/abc/xxx.class
+
+4.创建相同层级的目录，将新的xxx.class文件放到该目录下
+
+5.替换jar包内的class文件
+jar -uvf xxx.jar com/xxx/abc/xxx.class
+
+6.重启项目

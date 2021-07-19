@@ -1,0 +1,28 @@
+1.安装方法（这是一个针对mysql的工具包，但也可以用来检测别的进程，目前只使用过pt-ioprofile）
+wget "https://www.percona.com/downloads/percona-toolkit/3.0.3/binary/tarball/percona-toolkit-3.0.3_x86_64.tar.gz"
+tar xvf percona-toolkit-3.0.3_x86_64.tar.gz
+ps：可能需要安装依赖（apt-get install strace）
+使用方法：
+/percona-toolkit-3.0.3_x86_64/bin/pt-ioprofile --profile-pid=1962 -cell=sizes
+
+2.参数说明
+--cell 显示的单位，默认是times，即IO操作的时间，也可指定为count（IO操作的次数），size（IO操作的大小），如：--cell=times
+--profile-pid 指定线程的ID
+--group-by 分组的单位，默认是filename，即对文件名进行统计，也可指定为all，即对所有操作进行统计
+--run-time 执行strace命令的时间，如--run-time=5，就是追踪该进程IO五秒钟
+--save-samples 将strace和lsof获取的结果保存到指定的文件中
+
+3.数据说明（其实也就是看一下进程到底在读写哪些文件）
+read：从文件中读出数据。要读取的文件用文件描述符标识，数据读入一个事先定义好的缓冲区。
+write：把缓冲区的数据写入文件中。
+pread：由于lseek和read调用之间，内核可能会临时挂起进程，所以对同步问题造成了问题，调用pread相当于顺序调用了lseek和read，这两个操作相当于一个捆绑的原子操作。
+pwrite：由于lseek和write调用之间，内核可能会临时挂起进程，所以对同步问题造成了问题，调用pwrite相当于顺序调用了lseek 和write，这两个操作相当于一个捆绑的原子操作。
+fsync：确保文件所有已修改的内容已经正确同步到硬盘上，该调用会阻塞等待直到设备报告IO完成。
+open：打开一个文件，并返回这个文件的描述符。
+close：close系统调用用于“关闭”一个文件，close调用终止一个文件描述符以其文件之间的关联。文件描述符被释放，并能够重新使用。
+lseek：对文件描述符指定文件的读写指针进行设置，也就是说，它可以设置文件的下一个读写位置。
+fcntl：针对(文件)描述符提供控制。
+
+4.使用说明
+这个工具类在这次的问题查证中使用较少，没配置定时任务，仅在页面上打印信息进行分析
+/percona-toolkit-3.0.3_x86_64/bin/pt-ioprofile --profile-pid=1962 -cell=sizes

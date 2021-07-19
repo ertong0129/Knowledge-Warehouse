@@ -1,0 +1,7 @@
+本质上是先删除，再新增，POST方式
+http://localhost:9200/testIndex/_doc/aaa
+body:
+{
+    "uid":1,
+    "count":2
+}

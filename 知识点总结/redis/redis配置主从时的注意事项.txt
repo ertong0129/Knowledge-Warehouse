@@ -1,0 +1,25 @@
+以下几个参数需要注意
+
+1.repl-backlog-size
+增量写命令缓冲池大小，默认1m，服务器内存充足建议改为256m。
+在从库无法增量同步主库数据时（如从库全量同步完后重载数据到内存的这段时间），主库的写命令会放进一个缓冲池，这个参数指定了缓冲池的大小，如果缓冲池太小，写命令溢出，会导致再次发生全量同步
+
+2.repl-timeout
+同步超时时间，默认60s，建议改大（主要看主库rdb需要多长时间）
+盟友圈配置为1200s
+三种情况认为复制超时：
+1）slave角度，repl-timeout时间内没有收到master SYNC传输的rdb snapshot数据，
+2）slave角度，在repl-timeout没有收到master发送的数据包或ping，
+3）master角度，在repl-timeout时间没有收到REPCONF ACK确认信息
+
+3.slave-read-only
+从库是否只读，默认yes
+在进行主从切换，项目读写切到主库的时候，需要调整这个参数为no
+
+4.client-output-buffer-limit
+数据缓冲池大小，主要关注第二条的配置（slave），默认为128m,64m,60（超过128m立即断开连接，超过64m以上60s立即断开连接）
+在服务器内存充足的情况下，建议改为dump文件的大小的一半以上，或改成 0 0 0（不限制）
+这个参数值太小主从同步会失败
+client-output-buffer-limit normal 0 0 0
+client-output-buffer-limit slave 128mb 64mb 60
+client-output-buffer-limit pubsub 32mb 8mb 60

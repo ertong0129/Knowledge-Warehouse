@@ -1,0 +1,13 @@
+这个文件夹中的文件都是linux常用的命令或工具
+1.iotop：主要看磁盘读写
+2.iostat：主要看磁盘读写
+3.pidstat：
+4.pt-ioprofile：主要看某进程读写了哪些文件
+5.iftop：主要看网络带宽
+6.find -mtime 1：查看该文件夹下时间段内文件改动记录（为1时是一天，为2时是两天，依次类推，可以为小数，如0.0001）
+
+以下文章是感觉参考价值较大的
+1.定位磁盘io问题：
+https://www.cnblogs.com/summerxye/p/11114384.html 
+2.linux命令大全：
+https://www.runoob.com/linux/linux-command-manual.html

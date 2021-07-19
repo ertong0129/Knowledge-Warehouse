@@ -1,0 +1,41 @@
+环境描述：
+共有三台sentinel：A、B、C，两台redis服A、B，三台业务服
+
+问题表现：
+zmweb项目整点经常会出现redis连接超时报错，报错时三台业务服都会报错
+java.net.SocketTimeoutException: Read timed out; 
+nested exception is redis.clients.jedis.exceptions.JedisConnectionException: 
+java.net.SocketTimeoutException: Read timed out
+同时查看redis服网络负载发现，redis服A、B都会在整点出现流量峰值，达到300Mbit/s
+
+问题排查：
+1.首先怀疑是触发了主从全量同步导致的流量峰值，从而导致流量峰值，带宽被打满，业务服无法正常连接redis服
+
+2.经过查看redis日志，证实每个整点确实触发了一次全量同步，开始研究触发全量同步的原因：从以下几个角度进行分析
+（1）redis主库写缓冲区大小太小（参数：repl-backlog-size），主库短时间内大量数据写入导致缓冲区溢出，从库触发全量同步
+（2）sentinel导致的redis主从切换
+
+3.查看sentinel日志，确定是整点的时候由sentinel进行了主从切换（可参考目录下sentinel日志解析），并切换失败，但依然需要进行主从同步
+
+4.查看sentinel参数，发现有两个参数设置不当
+（1）down-after-milliseconds 1000 （sentinel多少ms没有正常接收redis的数据，就认为该redis主观下线，默认值30000）
+（2）failover-timeout 5000 （在进行故障迁移时，多少ms内没有完成，就会被判定失败（我怀疑是回退改动）默认值180000）
+这两个参数设置不当，导致sentinel在1秒内没有接收到redis的响应，就认为主库不可用，开始将从库升级为主库，而该次主从切换5秒内没有执行完成，导致sentinel回滚这次改动，但从库依然需要全量同步一次主库的数据
+
+5.将sentinel这两个参数恢复成默认值后，整点不再进行全量同步，流量峰值的问题得到解决，但redis连接超时报错依然存在，怀疑是存在慢查询
+
+6.查看redis慢查询日志（命令：redis-cli slowlog get 128）发现，确实是整点的时候有执行两条慢查询（keys操作），一条3s+，一条5s+
+
+7.结合项目配置文件redis设置，5s内没有获取到数据就主动断开连接，发现确实是慢查询导致的报错，后续对程序进行优化
+
+
+sentinel连接方法
+redis-cli -p sentinel端口
+
+sentinel命令
+sentinel masters 获取当前连接的sentinel信息
+sentinel set 节点名 参数名参数值
+
+慢查询相关参数：
+slowlog-log-slower-than：执行时间超过μs（微秒）的查询会被记录，默认值1000（1ms）
+slowlog-max-len：慢查询日志列表大小，超过大小的数据会被抛弃，默认值128

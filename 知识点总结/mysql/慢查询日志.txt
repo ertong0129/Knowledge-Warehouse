@@ -1,0 +1,43 @@
+将运行时间超过阈值的SQL语句记录到慢查询日志中，mysql默认不开启，需要手动设置开启
+
+参数说明：
+log_slow_queries：
+是否开启慢查询日志，ON为开启
+
+long_query_time：
+超过x秒的SQL算作慢查询，默认值为10，即超过10s的SQL语句会被记录到慢查询日志中
+
+log_queries_not_using_indexes：
+运行的SQL语句没有使用索引，会被记录到慢查询语句中，为ON时开启
+
+log_throttle_queries_not_using_indexes：
+每分钟允许记录到慢查询日志的未使用索引的SQL语句
+
+long_query_io：
+将超过指定逻辑IO（包括从缓冲池读和从磁盘读的次数，物理IO（从磁盘读的次数））次数的SQL语句记录到慢查询日志中，默认值为100
+
+slow_query_type：
+启用slow_log的方式
+0：不将SQL语句记录到慢查询日志
+1：根据查询时间记录
+2：根据逻辑IO次数记录
+3：根据查询时间及逻辑IO次数记录
+
+
+工具说明：
+mysqldumpslow
+-s，是order的顺序，以下参数是排序参数
+al 平均锁定时间
+ar 平均返回记录时间
+at 平均查询时间（默认）
+c 计数
+l 锁定时间
+r 返回记录
+t 查询时间
+
+-r，倒序输出
+-t，是top n的意思，即为返回前面多少条的数据
+-g，后边可以写一个正则匹配模式，大小写不敏感的
+
+也可以从表中查询
+表名：mysql.slow_log

@@ -1,0 +1,53 @@
+UseSerialGC：
+虚拟机运行在Client模式下的默认值，打开此开关后，使用Serial+SerialOld进行垃圾回收
+
+UseParNewGC：
+打开此开关后，使用ParNew+Serial Old进行垃圾回收
+
+UseConcMarkSweepGC：
+打开此开关后，使用ParNew+CMS+Serial Old（备用，CMS失败时使用）进行垃圾回收
+
+UseParallelGC：
+虚拟机在Server模式下的默认值，打开此开关后，使用Parallel Scavenge+Serial Old进行垃圾回收
+
+UseParallelOldGC：
+打开此开关后，使用Parallel Scavenge+Parallel Old进行垃圾回收
+
+SurvivorRatio：
+新生代Eden区域和Survivor区域（与1个的比值，但是Survivor区是有2个的）的容量比值，默认为8，即Eden/Survivor=8
+
+PretenureSizeThreshold：
+直接晋升到老年代的对象大小，设置这个参数以后，大于这个参数的对象直接在老年代分配
+
+MaxTenuringThreshold：
+晋升到老年代的对象年龄，每个对象在坚持过一次Minor GC后，年龄就+1，超过这个参数值就进入老年代
+
+UseAdaptiveSizePolicy：
+由虚拟机自动的动态调整堆中各区域的大小和进入老年代的条件
+
+HandlePromotionFailure：jdk1.6(update24)之后失效
+是否允许担保失败，即老年代剩余空间不足以应付新生代的整个Eden区和Survivor区都存活的极端情况
+不允许担保失败，则立即执行1次FullGC，=
+允许担保失败，则先尝试进行一次MinorGC，如果空间不足，则再执行一次FullGC（绕了一圈）
+
+ParallelGCThreads：
+设置并行GC时内存回收的线程数
+
+GCTimeRatio：
+设置CPU吞吐量大小，默认值为99（垃圾回收时间占比1%）
+如果设为19，垃圾回收时间占比5%（1/（1+19））
+
+MaxGCPauseMills：
+设置GC的最大停顿时间，仅在使用Parallel Scavenge收集器时生效
+
+CMSInitiatingOccupancyFraction：
+设置CMS收集器在老年代空间使用多少后触发垃圾回收
+
+UseCMSCompactAtFullCollection：
+设置CMS收集器在完成垃圾回收后是否要进行一次内存整理
+
+CMSFullFCsBeforeCompaction：
+设置CMS收集器在执行多少次不整理的FullGC后，执行一次整理的，默认为0，即每次FullGC都进行碎片整理
+
+-XX:+UseG1GC
+使用 G1 垃圾收集器

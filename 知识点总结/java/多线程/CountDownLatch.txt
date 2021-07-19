@@ -1,0 +1,25 @@
+CountDownLatch：等到所有线程都到达某个点后，才继续执行下一步
+
+new CountDownLatch(n)：创建一个资格为n的latch，当资格为0时，latch.await才会被通知可以继续执行
+.await()：等待
+.await(time, timeUnit)：限时等待，超时后直接执行后面的逻辑
+.countDown()：计数-1
+
+使用示例：
+public static void main(String[] args) {
+    CountDownLatch latch = new CountDownLatch(10);
+    ExecutorService fixedPool = Executors.newFixedThreadPool(10);
+    for (int i = 0; i < 10; i++) {
+        fixedPool.execute(() -> {
+            try {
+                latch.countDown();
+                latch.await(1, TimeUnit.SECONDS);
+                System.out.println("执行任务");
+                Thread.sleep(1000);
+            } catch (Exception e) {
+                e.printStackTrace();
+            } 
+         });
+    }
+    fixedPool.shutdown();
+}

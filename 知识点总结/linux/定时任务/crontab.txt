@@ -1,0 +1,3 @@
+crontab：循环执行的定时任务
+使用方法：在/etc/crontab中加新的一行配置，示例
+*/1 * * * * root /bin/bash /tmp/test.sh

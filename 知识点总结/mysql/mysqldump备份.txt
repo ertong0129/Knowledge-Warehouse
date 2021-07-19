@@ -1,0 +1,36 @@
+mysqldump：mysql自带的逻辑备份工具
+
+使用方式：
+mysqldump [选项] 数据库名 [表名] > 脚本名
+或
+mysqldump [选项] --数据库名 [选项 表名] > 脚本名
+或
+mysqldump [选项] --all-databases [选项]  > 脚本名
+
+参数说明：
+-host	-h	服务器IP地址
+--port	-P	服务器端口号
+--user	-u	MySQL 用户名
+--pasword	-p	MySQL 密码
+--databases		指定要备份的数据库
+--all-databases		备份mysql服务器上的所有数据库
+--compact		压缩模式，产生更少的输出
+--comments		添加注释信息
+--complete-insert		输出完成的插入语句
+--lock-tables		备份前，锁定所有数据库表
+--no-create-db/--no-create-info		禁止生成创建数据库语句
+--force		当出现错误时仍然继续备份操作
+--default-character-set		指定默认字符集
+--add-locks		备份数据库表时锁定数据库表
+--add-drop-database   每个数据库创建之前添加drop数据库语句。
+--master-data  =1：添加change master信息（只包含LSN信息，不包含ip、端口），=2：添加change master信息，并注释掉（不执行）。
+
+还原命令：
+mysqladmin -uroot -p create db_name 
+mysql -uroot -p  db_name < /backup/mysqldump/db_name.db
+或直接在mysql内执行
+source db_name.db
+
+注意：
+在导入备份数据库前，db_name如果没有，是需要创建的； 而且与db_name.db中数据库名是一样的才可以导入。
+不同名也可以导入，但是需要修改导出数据的文件中使用的database，才能导入

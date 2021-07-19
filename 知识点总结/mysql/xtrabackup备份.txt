@@ -1,0 +1,23 @@
+xtrabackup：Percona公司开发的一个用于MySQL数据库物理热备的备份工具
+
+操作步骤：
+1.安装xtrabackup
+（1）wget "https://www.percona.com/downloads/XtraBackup/Percona-XtraBackup-2.4.12/binary/debian/strech/x86_64/percona-xtrabackup-24_2.4.12-1.strech_amd64.deb"
+（2）dpkg -i percona-xtrabackup-24_2.4.12-1.stretch_amd64.deb
+（3）apt --fix-broken install
+（4）apt-get install libev4
+
+2.进行全量备份
+innobackupex --defaults-file=/etc/mysql/my.cnf（mysql配置文件） --databases="库1 库2" --host=本机ip --user=root --password=密码 /usr/websync/backup（文件存放目录）
+
+3.进行增量备份
+innbackup --user=root --password=密码 --host=本机ip --incremental /usr/websync/backup（文件存放目录） --incremental-basedir= /usr/websync/backup/2020-06-25_23-57-06/（全量备份文件的目录）
+
+4.合并全量备份数据
+innobackupex --apply-log --redo-only /usr/websync/backup/2020-06-25_23-57-06/（全量备份文件的目录）
+
+5.合并增量备份数据（有多个要合并多个）
+/usr/websync/backup/2020-06-26_00-30-06/（全量备份文件的目录）--incremental-basedir= /usr/websync/backup/2020-06-25_23-57-06/（全量备份文件的目录）
+
+6.恢复数据
+innobackupex --defaults-file=/etc/mysql/my.cnf（mysql配置文件）/usr/websync/backup/2020-06-25_23-57-06/（全量备份文件的目录） --copy-back --force-non-empty-directories

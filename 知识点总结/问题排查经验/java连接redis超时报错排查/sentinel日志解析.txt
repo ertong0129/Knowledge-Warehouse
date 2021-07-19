@@ -1,0 +1,96 @@
+sentinel对应id及服务器说明：
+10.82.194.198 26381 d46db99ea6b9563b81938238953e52b7d2749ee1 这台应该是主库
+10.85.204.167 26381 d3493c2fa00740b2e7f877a3df42606fa0ca3b1d
+10.83.64.103 26381 1033aee5ba7fb91d1d95c78523c22b32b2fbbffc
+#10.83.64.32 26381 0598aee5ba7fb91d1d95c78523c22b32b2fbbffc 这台应该是下掉了
+
+14:00:01.534 # +sdown master mymaster 10.82.194.198 6380 
+198服redis处于主观下线状态
+
+14:00:01.631 # +odown master mymaster 10.82.194.198 6380 #quorum 2/2  
+198服redis处于客观下线状态
+
+14:00:01.631 # +new-epoch 14159
+配置版本更新到新的纪元
+
+14:00:01.631 # +try-failover master mymaster 10.82.194.198 6380
+一个新的故障迁移操作正在执行中，等待一个sentinel leader被大多数 Sentinel 选中
+
+14:00:01.681 # +vote-for-leader d46db99ea6b9563b81938238953e52b7d2749ee1 14159
+198的sentinel投票给198
+
+14:00:01.700 # 1033aee5ba7fb91d1d95c78523c22b32b2fbbffc voted for d46db99ea6b9563b81938238953e52b7d2749ee1 14159
+103的sentinel投票给198
+
+14:00:02.058 # d3493c2fa00740b2e7f877a3df42606fa0ca3b1d voted for d46db99ea6b9563b81938238953e52b7d2749ee1 14159
+167的sentinel投票给198
+
+14:00:02.074 # +elected-leader master mymaster 10.82.194.198 6380
+198的sentinel赢得选举，可以选择主库，进行故障迁移操作了
+
+14:00:02.074 # +failover-state-select-slave master mymaster 10.82.194.198 6380
+故障转移操作现在处于 select-slave 状态 —— sentinel 正在寻找可以升级为主服务器的从服务器
+
+14:00:02.137 # +selected-slave slave 10.85.204.167:6380 10.85.204.167 6380 @ mymaster 10.82.194.198 6380
+sentinel 顺利找到适合进行升级的从服务器167用于升级为主库
+
+14:00:02.137 * +failover-state-send-slaveof-noone slave 10.85.204.167:6380 10.85.204.167 6380 @ mymaster 10.82.194.198 6380
+sentinel 正在将指定的从服务器167升级为主服务器，等待升级功能完成
+
+14:00:02.200 * +failover-state-wait-promotion slave 10.85.204.167:6380 10.85.204.167 6380 @ mymaster 10.82.194.198 6380
+
+
+14:00:02.728 # +promoted-slave slave 10.85.204.167:6380 10.85.204.167 6380 @ mymaster 10.82.194.198 6380
+
+
+14:00:02.728 # +failover-state-reconf-slaves master mymaster 10.82.194.198 6380
+
+
+14:00:02.779 # +failover-end master mymaster 10.82.194.198 6380
+故障转移操作顺利完成。所有从服务器都开始复制新的主服务器了
+
+14:00:02.779 # +switch-master mymaster 10.82.194.198 6380 10.85.204.167 6380
+配置变更，主服务器的 IP 和地址已经改变，旧服务器198，新服务器167
++switch-master <master name> <oldip> <oldport> <newip> <newport> 
+
+14:00:02.779 * +slave slave 10.82.194.198:6380 10.82.194.198 6380 @ mymaster 10.85.204.167 6380
+一个新的从服务器198已经被sentinel识别并关联
+
+14:00:03.826 # +sdown slave 10.82.194.198:6380 10.82.194.198 6380 @ mymaster 10.85.204.167 6380
+198服redis处于主观下线状态
+
+14:00:05.910 # -sdown slave 10.82.194.198:6380 10.82.194.198 6380 @ mymaster 10.85.204.167 6380
+198服redis取消主观下线状态
+
+14:00:06.946 # +new-epoch 14160
+配置版本更新到新的纪元
+
+14:00:06.947 # +vote-for-leader d3493c2fa00740b2e7f877a3df42606fa0ca3b1d 14160
+198的sentinel投票给167
+
+14:00:07.011 # +sdown master mymaster 10.85.204.167 6380
+167服redis处于主观下线状态
+
+14:00:07.011 # +odown master mymaster 10.85.204.167 6380 #quorum 3/2
+167服redis处于客观下线状态
+
+14:00:07.011 # Next failover delay: I will not start a failover before Tue Dec  1 14:00:17 2020
+在14:00:17之前不会再进行故障转移
+
+14:00:07.896 # -sdown master mymaster 10.85.204.167 6380
+167服redis取消主观下线状态
+
+14:00:07.896 # -odown master mymaster 10.85.204.167 6380
+167服redis取消客观下线状态
+
+14:00:08.099 # +config-update-from sentinel d3493c2fa00740b2e7f877a3df42606fa0ca3b1d 10.85.204.167 26381 @ mymaster 10.85.204.167 6380
+
+
+14:00:08.099 # +switch-master mymaster 10.85.204.167 6380 10.82.194.198 6380
+配置变更，主服务器的 IP 和地址已经改变，旧服务器167，新服务器198
+
+14:00:08.099 * +slave slave 10.85.204.167:6380 10.85.204.167 6380 @ mymaster 10.82.194.198 6380
+
+
+14:00:18.187 * +convert-to-slave slave 10.85.204.167:6380 10.85.204.167 6380 @ mymaster 10.82.194.198 6380
+

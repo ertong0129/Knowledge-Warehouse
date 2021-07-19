@@ -1,0 +1,61 @@
+#!/bin/bash
+
+fun_if(){
+    read -p "if随便输入:    " -t 3 INPUT
+    INPUT=${INPUT:-root}
+    if [ ${INPUT} == "Y" ]; then
+        echo "Y" >> test.log
+        echo "YYY"
+    elif [ ${INPUT} == "root" ]; then
+        echo "default"
+    else
+        echo ${INPUT}
+    fi
+}
+
+func_case(){
+    read -p "case随便输入:     " -t 3 INPUT
+    INPUT=${INPUT:-root}
+    case ${INPUT} in
+       "N") echo "NNNN";;
+       "Y") echo "YYYY";;
+       "ro") echo "AAAA";;
+       *) echo "default";;
+    esac
+}
+
+func_while(){
+    INPUT=1
+    while [ ${INPUT} != "Y" ]
+    do
+        read -p "while随便输入:      " -t 3 INPUT
+        echo ${INPUT}
+    INPUT=${INPUT:-root}
+    done
+}
+
+func_until(){
+    INPUT=1
+    until [ ${INPUT} == "Y" ]
+    do
+        read -p "until随便输入:      " -t 3 INPUT
+        echo ${INPUT}
+    INPUT=${INPUT:-root}
+    done
+}
+
+func_fordodone(){
+    for index in 1 2 3
+    do
+        echo ${index}
+    done
+}
+
+func_forfor(){
+    sum=0
+    for (( i=1;i<=200;i++ ))
+    do
+    sum=$(($sum+$i))
+    done
+    echo $sum
+}

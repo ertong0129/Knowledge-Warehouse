@@ -1,0 +1,20 @@
+#这是一个通用node项目和java的 springboot 和 thrift 项目版本启停控制脚本
+#运行的jar包名称或node的应用名称（无后缀）
+app_name=ywweb_en
+#当前设备地址
+ip=10.96.121.145
+#当前运行环境
+environment=out
+#项目类型 node 或者 springboot 或者 thrift
+app_type=node
+#当项目类型 node 时，启动参数
+node_cmd=ywweb.js -i 1 -n ywweb_tw
+#是否自动更新，如果自动更新，则不上报版本信息，也不做运行检测
+#如果应用本来就没在运行，则设为true也不会自动更新
+auto_refresh=true
+#版本管理服务地址
+server_addr=http://test-zmweb.2980.com:8002
+#jar启动时的JVM参数
+java_options=-Xms512m -Xmx1024m -XX:MaxDirectMemorySize=128m
+#当项目类型springboot时，jar命令后可加自定义参数，${version}会填充当前要执行的版本号
+#app_param=--version=${version}

@@ -1,0 +1,14 @@
+jdk1.8提供的流式计算API
+示例：
+resultList.stream().filter(StringUtil::isNotBlank).sort((a,b) -> a.compareTo(b)).unique().collect(Collectors.toList());
+
+.stream()：获取一个流对象
+.filter()：只留下满足条件的数据
+.sort()：根据某些规则进行排序
+.unique()：对重复的数据进行去重
+.collect()：对数据进行收集
+.parallel()：使用并行流
+.count()：统计共有多少条数据
+.skip()：跳过前n条数据
+.limit()：限制只取n条数据
+.reverse()：倒序输出

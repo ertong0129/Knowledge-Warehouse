@@ -1,0 +1,14 @@
+主从同步：主库写，从库自动同步数据
+
+在主库配置文件里配置需要同步的数据库、不需要同步的数据库
+
+主库分配同步账号
+grant replication slave on *.* to '用户名'@'ip' identified by '密码';
+
+在从库内执行
+change master to master_host='主库ip',master_port=主库端口号,master_user='主库用户名',master_password='主库密码',master_log_file='主库日志文件名称',master_log_pos=主库LSN
+这条命令适用于已经从主库拷贝了全量数据到从库的情况，从库在同步时，只需要重做拷贝时间之后的日志就行
+
+查看主从同步状态
+show slave status \G
+只要 Slave_IO_Running和Slave_SQL_Running都是Yes，则同步正常

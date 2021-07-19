@@ -1,0 +1,52 @@
+innodb引擎：基于磁盘存储，每次读取数据，需要将数据从磁盘中读取到内存中，然后才能读取
+每次修改数据后，并不是理解写入磁盘中，而是等脏页达到一定数量时，才一起写入
+
+参数类别：
+静态参数：在实例运行周期内不能更改
+动态参数：可以通过SET命令对动态参数值进行修改
+SET [global | session] xxx=xxx
+SET [@@global. | @@session. | @@] xxx=xxx
+global：全局改动，改动后直到运行周期结束都会生效
+session：只针对当前会话改动
+
+参数设置：
+innodb_buffer_pool_size：
+缓冲池的大小，默认为128M（16K*8192），生产环境需要调大，否则会经常发送IO
+
+innodb_buffer_pool_instances：
+缓冲池实例个数
+
+innodb_old_blocks_pct：
+LRU列表的倒序写入点（默认为37），新写入内存的数据会放在这个点之后，防止某次大批量的数据读入把热点数据刷出缓存
+
+innodb_log_buffer_size：
+重做日志缓冲，一般情况下每秒将重做日志写入到日志文件，要保证每秒产生的事务量在这个缓存大小之内，默认为8m
+
+innodb_change_buffer_max_size：
+Change Buffer：对数据进行改动后，不立即改动，而是写入Change Buffer（起到欺骗的效果，收集多次操作一起执行，避免离散读取造成的性能下降）Change Buffer的大小最大可占缓冲池大小的比例，默认为25（25%），最大有效值为50
+
+innodb_lru_scan_depth：
+默认值为1024，控制lru列表可用页的数量，缓冲池内可用页数量少于100，会将列表尾端的页移除，将可用页恢复到这个数量。
+
+innodb_max_dirty_pages_pct：
+默认值为75。当缓冲池的脏页数量大于75%时，将一部分脏页写入磁盘
+磁盘中的脏页比例大于这个值的时候，每秒执行一次的线程会刷新至多100个脏页到磁盘
+（这是后备操作，平时已经有一个线程每10秒将10或100个脏页写入磁盘了）
+
+innodb_use_native_aio：
+是否开启异步IO（不需要等待从磁盘读取完成，就可以进行下一次读取），linux下默认为开启
+
+innodb_fast_shutdown：默认值为1。mysql关闭时，
+为0时，innodb需要完成所有的full perge（删除无用的Undo页）和 merge insert buffer（将插入缓冲合并到辅助索引树中），需要将所有脏页刷回磁盘。
+为1时：只将脏页刷回磁盘，不执行full perge 和 merge insert buffer
+为2时：不完成刷新脏页、full perge、merge insert buffer操作，只将日志写入日志文件，等到mysql重启时进行恢复操作。
+
+innodb_force_recovery：
+1：忽略检查到的corrupt页
+2：阻止Master Thread线程运行（即每秒1次的full purge、merge insert buffer等操作都不执行）
+3：不进行事务回滚操作
+4：不进行merge insert buffer操作
+5：不查看Undo log，将未提交的事务都视为已提交
+6：不进行前滚
+注意：大于0后，只允许进行select、create、drop操作，不允许进行insert、update、delete等DML操作
+

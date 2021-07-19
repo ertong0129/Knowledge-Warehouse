@@ -1,0 +1,4 @@
+防止thrift oom
+args.maxReadBufferBytes
+
+https://my.oschina.net/shipley/blog/422204

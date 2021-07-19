@@ -1,0 +1,17 @@
+set global transaction isolation level REPEATABLE READ;
+set global transaction isolation level  READ COMMITTED;
+set global transaction isolation level READ UNCOMMITTED;
+set global transaction isolation level SERIALIZABLE;
+
+rr和serializable的区别与共性
+1.针对同一条数据来说
+serializable会对所有读加锁，即保证数据不会改变。rr只保证自己事务内读到数据相同，即其他事务可以改变数据。
+
+2.在插入一条有唯一索引的数据时
+两个事务插同一值的数据，第二个事务都会阻塞
+
+3.插入数据时
+serializable会对所有读加锁，即保证数据不会改变。rr只保证自己事务内读到数据相同，即其他事务可以改变数据。
+即serializable如果select * from table后，就不能再插数据了
+
+MySQL中SERIALIZABLE级别读操作加读锁、写操作加写锁，REPEATABLE READ级别读操作不加锁，采用多版本读，写操作加写锁

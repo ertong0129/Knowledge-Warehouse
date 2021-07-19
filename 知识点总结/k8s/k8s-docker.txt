@@ -1,0 +1,26 @@
+docker获取容器id
+docker inspect --format "{{.State.Pid}}" 容器id
+docker容器宿主机复制文件
+往容器内方文件：
+docker cp ./test.txt 容器id:/容器内路径
+从容器内拿文件
+docker cp 容器id:/容器内路径 ./
+
+
+
+k8s
+pods
+svc
+deploy
+ep
+rs
+cm
+
+kubectl get pods (-o wide) (-o yaml)
+kubectl edit pods podName
+kubectl describe po podName
+kubectl exec -it podName sh
+kubectl explain po
+
+kubectl api-resources
+
