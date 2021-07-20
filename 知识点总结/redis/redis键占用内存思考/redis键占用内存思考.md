@@ -102,7 +102,7 @@ size_t objectComputeSize(robj *o, size_t sample_size);
 
 
 
-至此分析出了`memory usage xxx`计算string键占用内存的原理，但这个内存是否是真正使用的内存呢？比如使用embstr编码的时候，值对象占用大小计算中的+2是什么含义？使用jemalloc分配内存的时候，是否要以2^n字节为单位分配内存？
+至此分析出了`memory usage xxx`计算string键占用内存的原理，但这个内存是否是真正使用的内存呢？比如使用embstr编码的时候，值对象占用大小计算中的+2是什么含义？使用jemalloc分配内存的时候，是否要以8字节为单位分配内存？
 
 
 
@@ -119,3 +119,9 @@ size_t objectComputeSize(robj *o, size_t sample_size);
 具体issue链接：
 
 https://github.com/redis/redis/issues/9258
+
+
+
+之前版本的`memory usage xxx`命令计算出的占用内存大小确实是不准确的，这个问题在新分支中被修复了（分配内存的时候，要以8字节为单位）
+
+https://github.com/redis/redis/pull/9095
