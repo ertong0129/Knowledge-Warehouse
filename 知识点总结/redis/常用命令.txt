@@ -19,3 +19,7 @@ type xxx  查看键的类型
 strlen xxx  查看键对应的值的长度
 
 debug object xxx 查看对象信息
+
+memory doctor 查看内存诊断信息
+
+memory usage xxx 查看某个键使用的内存大小（抽样检测，集合默认抽5个）
