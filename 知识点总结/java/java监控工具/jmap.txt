@@ -8,3 +8,6 @@ jmap：可以输出所有内存中对象的工具
 -permstat 打印classload和jvm heap长久层的信息. 包含每个classloader的名字,活泼性,地址,父classloader和加载的class数量. 另外,内部String的数量和占用内存数也会打印出来
 -F 强迫.在pid没有相应的时候使用-dump或者-histo参数. 在这个模式下,live子参数无效
 -J 传递参数给jmap启动的jvm
+
+强制gc：
+jmap -histo:live 6
