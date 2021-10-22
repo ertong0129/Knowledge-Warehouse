@@ -17,6 +17,8 @@ apt install -y kubelet kubeadm kubectl
 4.初始化
 kubeadm init --image-repository="registry.cn-hangzhou.aliyuncs.com/google_containers"
 （有错误，可以跳过错误）
+此处可能存在下载coredns错误，查看此链接解决
+https://blog.51cto.com/8999a/2784605
 
 5.将环境变量导出
 vim ~/.bashrc
@@ -88,6 +90,7 @@ kubectl get ep
 vim /etc/kubernetes/manifests/kube-apiserver.yaml
 找到--service-cluster-ip-range 这一行，在这一行的下一行增加 如下内容
 - --service-node-port-range=1-65535
+配置修改完后k8s需要重启，需要时间，重启时kubectl无法操作k8s
 
 修改svc配置
 kubectl edit svc nginx-service，修改nodePort端口
@@ -96,6 +99,12 @@ kubectl edit svc nginx-service，修改nodePort端口
 https://mp.weixin.qq.com/s/syQKM031QvGQEFxB5bXaHA
 https://www.runoob.com/docker/debian-docker-install.html
 https://gitee.com/pingfanrenbiji/study/tree/master/k8s/nginx
+https://blog.csdn.net/woay2008/article/details/93250137
+https://blog.51cto.com/8999a/2784605
+https://github.com/kubernetes/kubernetes/issues/54918
+
+查看错误日志
+journalctl -xeu kubelet
 
 
 
