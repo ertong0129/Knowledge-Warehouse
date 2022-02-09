@@ -1,5 +1,0 @@
-查看所有索引：
-GET http://localhost:9200/_cat/indices?v
-
-查看某条索引的结构
-GET http://localhost:9200/index_name/_mapping?pretty
